@@ -1,0 +1,9 @@
+Code:
+
+InvalidInput: The input came with missing data.
+UsernameAlreadyExists: Already existent on database.
+
+Type:
+
+InputValidationError: The input came with missing data.
+BusinessLogicValidationError: Some business logic does not be satisfied.
