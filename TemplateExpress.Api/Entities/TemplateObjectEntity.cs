@@ -7,8 +7,8 @@ public class TemplateObjectEntity
     public bool Italic { get; set; }
     public bool Bold { get; set; }
     public short FontSize { get; set; }
-    public string FontFamily { get; set; }
-    public string FillStyle { get; set; }
+    public required string FontFamily { get; set; }
+    public required string FillStyle { get; set; }
     public short XPoint { get; set; }
     public short YPoint { get; set; }
     public short BaseBoxHeight { get; set; }
@@ -18,5 +18,5 @@ public class TemplateObjectEntity
     public DateTime UpdatedAt { get; set; }
     
     public long TemplateId { get; set; }
-    public TemplateEntity Template { get; set; }
+    public required TemplateEntity Template { get; set; }
     }

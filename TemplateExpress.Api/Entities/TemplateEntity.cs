@@ -14,6 +14,6 @@ public class TemplateEntity
     public DateTime UpdatedAt { get; set; }
     
     public long UserId { get; set; }
-    public UserEntity User { get; set; }
+    public required UserEntity User { get; set; }
     public ICollection<TemplateObjectEntity> TemplateObjects { get; set; }
 }
