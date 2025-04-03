@@ -6,24 +6,11 @@ namespace TemplateExpress.Api.Data;
 public class DataContext(DbContextOptions<DataContext> options) : DbContext(options)
 {
     public DbSet<UserEntity> Users { get; set; } = null!;
-    public DbSet<EmailConfirmationTokenEntity> EmailConfirmationTokens { get; set; } = null!;
     public DbSet<TemplateEntity> Templates { get; set; } = null!;
     public DbSet<TemplateObjectEntity> TemplateObjects { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<EmailConfirmationTokenEntity>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.HasOne(e => e.User)  
-                .WithOne(u => u.EmailConfirmationToken)
-                .HasForeignKey<EmailConfirmationTokenEntity>(e => e.UserId);
-
-            entity.HasIndex(e => e.Token).IsUnique();
-            entity.Property(e => e.ExpiresAt).IsRequired().HasColumnType("timestamp without time zone");
-            entity.Property(e => e.CreatedAt).IsRequired().HasColumnType("timestamp without time zone");
-            entity.Property(e => e.UpdatedAt).IsRequired().HasColumnType("timestamp without time zone");
-        });
 
         modelBuilder.Entity<UserEntity>(entity =>
         {

@@ -9,6 +9,6 @@
       - POSTGRES_PASSWORD=pass123
       - POSTGRES_DB=db123
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ./postgres_data:/var/lib/postgresql/data
 volumes:
   postgres_data:

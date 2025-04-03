@@ -1,5 +1,5 @@
 using FluentValidation;
-using TemplateExpress.Api.Dto.UserDtos;
+using TemplateExpress.Api.Dto.UserDto;
 
 namespace TemplateExpress.Api.Validations;
 

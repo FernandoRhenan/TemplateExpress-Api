@@ -1,7 +1,7 @@
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using TemplateExpress.Api.Data;
-using TemplateExpress.Api.Dto.UserDtos;
+using TemplateExpress.Api.Dto.UserDto;
 using TemplateExpress.Api.Interfaces.Services;
 using TemplateExpress.Api.Interfaces.Repositories;
 using TemplateExpress.Api.Services;

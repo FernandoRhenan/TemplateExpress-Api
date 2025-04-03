@@ -1,4 +1,4 @@
-namespace TemplateExpress.Api.Dto.UserDtos;
+namespace TemplateExpress.Api.Dto.UserDto;
 
 public record UserEmailDto(
     string Email

@@ -1,8 +1,5 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
-using TemplateExpress.Api.Dto.UserDtos;
+using TemplateExpress.Api.Dto.UserDto;
 using TemplateExpress.Api.Interfaces.Services;
 using TemplateExpress.Api.Results;
 
@@ -24,10 +21,10 @@ public class UsersController : ControllerBase
     [ProducesResponseType<UserEmailDto>(StatusCodes.Status200OK)]
     [ProducesResponseType<Error>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<Error>(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> PostUser([FromServices] IValidator<CreateUserDto> userValidator, [FromBody] CreateUserDto createUserDto)
+    public async Task<IActionResult> PostUser([FromBody] CreateUserDto createUserDto)
     {
    
-        var response = await _userService.CreateUserAsync(userValidator, createUserDto);
+        var response = await _userService.CreateUserAsync(createUserDto);
 
         if (response.IsSuccess)
         {
