@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using TemplateExpress.Api.Dto.UserDto;
 using TemplateExpress.Api.Interfaces.Services;
 using TemplateExpress.Api.Results;
+using TemplateExpress.Api.Results.EnumResponseTypes;
 
 namespace TemplateExpress.Api.Controllers;
 
@@ -31,7 +32,7 @@ public class UsersController : ControllerBase
             return Ok(response.Value);
         }
         
-        if (response.Error?.Code == "UsernameAlreadyExists")
+        if (response.Error?.Code == (byte)ErrorCodes.UsernameAlreadyExists)
         {
             return Conflict(response.Error);    
         }

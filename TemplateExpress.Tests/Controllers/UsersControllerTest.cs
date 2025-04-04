@@ -5,6 +5,7 @@ using TemplateExpress.Api.Controllers;
 using TemplateExpress.Api.Dto.UserDto;
 using TemplateExpress.Api.Interfaces.Services;
 using TemplateExpress.Api.Results;
+using TemplateExpress.Api.Results.EnumResponseTypes;
 
 namespace TemplateExpress.Tests.Controllers;
 
@@ -49,7 +50,7 @@ public class UsersControllerTest
             new ErrorMessage("Invalid input", "Check the fields.") 
         };
 
-        var mockServiceResponse = Result<UserEmailDto>.Failure(new Error("InvalidInput", "InputValidationError", errorMessages));
+        var mockServiceResponse = Result<UserEmailDto>.Failure(new Error((byte)ErrorCodes.InvalidInput, (byte)ErrorTypes.InputValidationError, errorMessages));
         userServiceMock.Setup(s => s.CreateUserAsync(createUserDto)).ReturnsAsync(mockServiceResponse);
 
         // Act
@@ -60,8 +61,8 @@ public class UsersControllerTest
 
         // Assert
         result.Should().BeOfType<BadRequestObjectResult>("the user wasn't created successfully.");
-        resultValue?.Code.Should().Be("InvalidInput");
-        resultValue?.Type.Should().Be("InputValidationError");
+        resultValue?.Code.Should().Be((byte)ErrorCodes.InvalidInput);
+        resultValue?.Type.Should().Be((byte)ErrorTypes.InputValidationError);
         userServiceMock.Verify(s => s.CreateUserAsync(createUserDto), Times.Once());
 
     }
@@ -79,7 +80,7 @@ public class UsersControllerTest
             new ErrorMessage("Invalid input", "Check the fields.") 
         };
 
-        var mockServiceResponse = Result<UserEmailDto>.Failure(new Error("UsernameAlreadyExists", "BusinessLogicValidationError", errorMessages));
+        var mockServiceResponse = Result<UserEmailDto>.Failure(new Error((byte)ErrorCodes.UsernameAlreadyExists, (byte)ErrorTypes.BusinessLogicValidationError, errorMessages));
         userServiceMock.Setup(s => s.CreateUserAsync(createUserDto)).ReturnsAsync(mockServiceResponse);
 
         // Act
@@ -90,8 +91,8 @@ public class UsersControllerTest
 
         // Assert
         result.Should().BeOfType<ConflictObjectResult>("the user username already exists.");
-        resultValue?.Code.Should().Be("UsernameAlreadyExists");
-        resultValue?.Type.Should().Be("BusinessLogicValidationError");
+        resultValue?.Code.Should().Be((byte)ErrorCodes.UsernameAlreadyExists);
+        resultValue?.Type.Should().Be((byte)ErrorTypes.BusinessLogicValidationError);
         
         userServiceMock.Verify(s => s.CreateUserAsync(createUserDto), Times.Once());
 
