@@ -4,6 +4,7 @@ using TemplateExpress.Api.Entities;
 using TemplateExpress.Api.Interfaces.Repositories;
 using TemplateExpress.Api.Interfaces.Services;
 using TemplateExpress.Api.Results;
+using TemplateExpress.Api.Results.EnumResponseTypes;
 using TemplateExpress.Api.Utils;
 using ValidationResult = FluentValidation.Results.ValidationResult;
 
@@ -30,7 +31,12 @@ public class UserService : IUserService
             var errors = validationResult.Errors
                 .Select(failure => new ErrorMessage(failure.ErrorMessage, "Fix the " + failure.PropertyName.ToLower() + " field."))
                 .ToList<IErrorMessage>();
-            return Result<UserEmailDto>.Failure(new Error("InvalidInput","InputValidationError", errors));
+            
+            return Result<UserEmailDto>.Failure(
+                new Error(
+                    (byte)ErrorCodes.InvalidInput,
+                    (byte)ErrorTypes.InputValidationError, 
+                    errors));
         }
 
         var thereIsEmail = await _userRepository.FindAnEmailAsync(createUserDto.Email);
@@ -43,7 +49,11 @@ public class UserService : IUserService
         if (thereIsUsername)
         {
             List<IErrorMessage> errors = [new ErrorMessage("This username already exists.", "Try another username.")];
-            return Result<UserEmailDto>.Failure(new Error("UsernameAlreadyExists","BusinessLogicValidationError", errors));
+            return Result<UserEmailDto>.Failure(
+                new Error(
+                (byte)ErrorCodes.UsernameAlreadyExists,
+                (byte)ErrorTypes.BusinessLogicValidationError, 
+                      errors));
         }
         
         var userEntity = new UserEntity
