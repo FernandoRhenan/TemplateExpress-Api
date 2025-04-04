@@ -1,0 +1,9 @@
+[ ] - Create a new Interface to Repository. It will contains generic methods, like SaveAsync. (do it in a feat: new-interface-repository branch)
+[ ] - Add SaveAsync method in IRepository
+[ ] - IUserRepository will extends IRepository and SaveAsync will serve to save transactions 
+===========================================
+[X] - Creates a new file called Security/TokenManager.cs (do it in feat: user-email-token-generation branch)
+[X] - Creates a new interface Security/ITokenManager.cs
+[ ] - Implements GenerateEmailConfirmationTokenAsync public method
+[ ] - Inject GenerateEmailConfirmationTokenAsync in UserServices constructor using Lazy<>.
+===========================================
