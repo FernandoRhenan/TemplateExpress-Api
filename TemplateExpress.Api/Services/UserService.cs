@@ -13,18 +13,16 @@ namespace TemplateExpress.Api.Services;
 public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
-    private readonly IValidator<CreateUserDto> _userValidator;
 
-    public UserService(IUserRepository userRepository, IValidator<CreateUserDto> userValidator)
+    public UserService(IUserRepository userRepository)
     {
         _userRepository = userRepository;
-        _userValidator = userValidator;
     }
 
-    public async Task<Result<UserEmailDto>> CreateUserAsync(CreateUserDto createUserDto)
+    public async Task<Result<UserEmailDto>> CreateUserAsync(IValidator<CreateUserDto> userValidator ,CreateUserDto createUserDto)
     {
 
-        ValidationResult validationResult = await _userValidator.ValidateAsync(createUserDto);
+        ValidationResult validationResult = await userValidator.ValidateAsync(createUserDto);
         if (!validationResult.IsValid)
         {
             // → Abstrair ↓
