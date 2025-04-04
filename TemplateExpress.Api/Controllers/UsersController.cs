@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using TemplateExpress.Api.Dto.UserDto;
 using TemplateExpress.Api.Interfaces.Services;
@@ -22,10 +23,10 @@ public class UsersController : ControllerBase
     [ProducesResponseType<UserEmailDto>(StatusCodes.Status200OK)]
     [ProducesResponseType<Error>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<Error>(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> PostUser([FromBody] CreateUserDto createUserDto)
+    public async Task<IActionResult> PostUser([FromServices] IValidator<CreateUserDto> userValidator, [FromBody] CreateUserDto createUserDto)
     {
    
-        var response = await _userService.CreateUserAsync(createUserDto);
+        var response = await _userService.CreateUserAsync(userValidator, createUserDto);
 
         if (response.IsSuccess)
         {
