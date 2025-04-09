@@ -7,5 +7,5 @@ namespace TemplateExpress.Api.Interfaces.Services;
 public interface IUserService
 {
     
-    Task<Result<UserEmailDto>> CreateUserAsync(IValidator<CreateUserDto> userValidator, CreateUserDto createUserDto);
+    Task<Result<UserEmailDto>> CreateUserAsync(CreateUserDto createUserDto);
 }

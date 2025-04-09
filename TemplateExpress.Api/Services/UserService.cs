@@ -22,10 +22,12 @@ public class UserService : IUserService
         _serviceProvider = serviceProvider;
     }   
 
-    public async Task<Result<UserEmailDto>> CreateUserAsync(IValidator<CreateUserDto> userValidator, CreateUserDto createUserDto)
+    public async Task<Result<UserEmailDto>> CreateUserAsync(CreateUserDto createUserDto)
     {
 
-        ValidationResult validationResult = await userValidator.ValidateAsync(createUserDto);
+        IValidator<CreateUserDto> validator = _serviceProvider.GetRequiredService<IValidator<CreateUserDto>>();
+            ValidationResult validationResult = await validator.ValidateAsync(createUserDto);
+            
         if (!validationResult.IsValid)
         {
             // → Abstrair ↓
@@ -43,7 +45,7 @@ public class UserService : IUserService
         var thereIsEmail = await _userRepository.FindAnEmailAsync(createUserDto.Email);
         if (thereIsEmail)
         {
-            List<IErrorMessage> errorMessages = [new ErrorMessage("This email already in use.", "Try another email.")];
+            List<IErrorMessage> errorMessages = [new ErrorMessage("This email is already in use.", "Try another email.")];
             Error error = new((byte)ErrorCodes.EmailAlreadyExists, (byte)ErrorTypes.BusinessLogicValidationError, errorMessages);
             return Result<UserEmailDto>.Failure(error);
         }

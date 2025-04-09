@@ -23,10 +23,10 @@ public class UsersController : ControllerBase
     [ProducesResponseType<UserEmailDto>(StatusCodes.Status200OK)]
     [ProducesResponseType<Error>(StatusCodes.Status409Conflict)]
     [ProducesResponseType<Error>(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> PostUser([FromServices] IValidator<CreateUserDto> userValidator, [FromBody] CreateUserDto createUserDto)
+    public async Task<IActionResult> PostUser([FromBody] CreateUserDto createUserDto)
     {
    
-        var response = await _userService.CreateUserAsync(userValidator, createUserDto);
+        var response = await _userService.CreateUserAsync(createUserDto);
 
         if (response.IsSuccess)
         {
