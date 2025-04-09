@@ -2,7 +2,7 @@ using TemplateExpress.Api.Dto.UserDto;
 
 namespace TemplateExpress.Api.Interfaces.Security;
 
-public interface ITokenManagerSecurity
+public interface ITokenManager
 {
-    Task<string> GenerateEmailConfirmationTokenAsync(UserIdAndEmailDto userIdAndEmailDto);
+    string GenerateEmailConfirmationTokenAsync(UserIdAndEmailDto userIdAndEmailDto);
 }

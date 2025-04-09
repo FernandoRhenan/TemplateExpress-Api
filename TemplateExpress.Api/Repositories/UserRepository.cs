@@ -22,15 +22,18 @@ public class UserRepository : IUserRepository
         return user;
     }
 
+    public async Task<EmailConfirmationTokenEntity> InsertEmailConfirmationTokenAsync(
+        EmailConfirmationTokenEntity emailConfirmationToken)
+    {
+        _context.EmailConfirmationTokens.Add(emailConfirmationToken);
+        await _context.SaveChangesAsync();
+        return emailConfirmationToken;
+    }
     public async Task<bool> FindAnEmailAsync(string email)
     {
         var thereIsAnEmail = await _context.Users.AnyAsync(u => u.Email == email);
         return thereIsAnEmail;
     }
 
-    public async Task<bool> FindAnUsernameAsync(string name)
-    {
-        var thereIsAnUsername = await _context.Users.AnyAsync(u => u.Username == name);
-        return thereIsAnUsername;
-    }
+
 }

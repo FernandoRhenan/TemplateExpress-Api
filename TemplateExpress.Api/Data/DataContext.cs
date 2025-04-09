@@ -1,16 +1,28 @@
 using Microsoft.EntityFrameworkCore;
 using TemplateExpress.Api.Entities;
-
 namespace TemplateExpress.Api.Data;
 
 public class DataContext(DbContextOptions<DataContext> options) : DbContext(options)
 {
     public DbSet<UserEntity> Users { get; set; } = null!;
+    public DbSet<EmailConfirmationTokenEntity> EmailConfirmationTokens { get; set; } = null!;
     public DbSet<TemplateEntity> Templates { get; set; } = null!;
     public DbSet<TemplateObjectEntity> TemplateObjects { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        
+        modelBuilder.Entity<EmailConfirmationTokenEntity>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasOne(e => e.User)  
+                .WithOne(u => u.EmailConfirmationToken)
+                .HasForeignKey<EmailConfirmationTokenEntity>(e => e.UserId);
+ 
+            entity.HasIndex(e => e.Token).IsUnique();
+            entity.Property(e => e.CreatedAt).IsRequired().HasColumnType("timestamp without time zone");
+            entity.Property(e => e.UpdatedAt).IsRequired().HasColumnType("timestamp without time zone");
+        });
 
         modelBuilder.Entity<UserEntity>(entity =>
         {
@@ -18,7 +30,6 @@ public class DataContext(DbContextOptions<DataContext> options) : DbContext(opti
             entity.HasIndex(u => u.Email).IsUnique();
             entity.Property(u => u.Email).IsRequired();
             entity.Property(u => u.Password).IsRequired();
-            entity.HasIndex(u => u.Username).IsUnique();
             entity.Property(u => u.Username).IsRequired();
             entity.Property(u => u.ConfirmedAccount).IsRequired().HasDefaultValue(false);
             entity.Property(u => u.CreatedAt).IsRequired().HasColumnType("timestamp without time zone");
