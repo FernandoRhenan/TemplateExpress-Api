@@ -22,7 +22,6 @@ public class UsersController : ControllerBase
     [HttpPost]
     [ProducesResponseType<UserEmailDto>(StatusCodes.Status200OK)]
     [ProducesResponseType<Error>(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType<Error>(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> PostUser([FromServices] IValidator<CreateUserDto> userValidator, [FromBody] CreateUserDto createUserDto)
     {
    
@@ -31,11 +30,6 @@ public class UsersController : ControllerBase
         if (response.IsSuccess)
         {
             return Ok(response.Value);
-        }
-        
-        if (response.Error?.Code == (byte)ErrorCodes.UsernameAlreadyExists)
-        {
-            return Conflict(response.Error);    
         }
         
         return BadRequest(response.Error);

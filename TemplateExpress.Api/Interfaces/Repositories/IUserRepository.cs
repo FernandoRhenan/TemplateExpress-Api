@@ -6,5 +6,7 @@ public interface IUserRepository
 {
     Task<UserEntity> InsertUserAsync(UserEntity user);
     Task<bool> FindAnEmailAsync(string email);
-    Task<bool> FindAnUsernameAsync(string username);
+
+    Task<EmailConfirmationTokenEntity> InsertEmailConfirmationTokenAsync(
+        EmailConfirmationTokenEntity emailConfirmationToken);
 }

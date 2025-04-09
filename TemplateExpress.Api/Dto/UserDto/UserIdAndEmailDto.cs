@@ -1,6 +1,6 @@
 namespace TemplateExpress.Api.Dto.UserDto;
 
 public record UserIdAndEmailDto(
-    string Id,
+    long Id,
     string Email
     );
