@@ -17,7 +17,7 @@ public class TokenManager : ITokenManager
     {
         _jwtOptions = jwtOptions.Value;
     }
-    public string GenerateEmailConfirmationTokenAsync(UserIdAndEmailDto userIdAndEmailDto)
+    public string GenerateEmailConfirmationToken(UserIdAndEmailDto userIdAndEmailDto)
     {
         // Create a new instance of TokenHandler
         var handler = new JwtSecurityTokenHandler();

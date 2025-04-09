@@ -2,11 +2,11 @@ using TemplateExpress.Api.Entities;
 
 namespace TemplateExpress.Api.Interfaces.Repositories;
 
-public interface IUserRepository
+public interface IUserRepository : IRepositoryBase
 {
-    Task<UserEntity> InsertUserAsync(UserEntity user);
-    Task<bool> FindAnEmailAsync(string email);
+    UserEntity InsertUser(UserEntity user);
 
-    Task<EmailConfirmationTokenEntity> InsertEmailConfirmationTokenAsync(
+    EmailConfirmationTokenEntity InsertEmailConfirmationToken(
         EmailConfirmationTokenEntity emailConfirmationToken);
+    Task<bool> FindAnEmailAsync(string email);
 }
