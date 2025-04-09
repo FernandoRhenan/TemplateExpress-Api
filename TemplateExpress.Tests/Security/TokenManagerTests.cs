@@ -20,7 +20,7 @@ public class TokenManagerTests
         var tokenManagerSecurity = new TokenManager(jwtOptions);
         
         // Act
-        var token = tokenManagerSecurity.GenerateEmailConfirmationTokenAsync(userIdAndEmailDto);
+        var token = tokenManagerSecurity.GenerateEmailConfirmationToken(userIdAndEmailDto);
         
         // Assert
         var handler = new JwtSecurityTokenHandler();
@@ -60,7 +60,7 @@ public class TokenManagerTests
         var tokenManagerSecurity = new TokenManager(jwtOptions);
         
         // Act
-        Action act = () => tokenManagerSecurity.GenerateEmailConfirmationTokenAsync(userIdAndEmailDto);
+        Action act = () => tokenManagerSecurity.GenerateEmailConfirmationToken(userIdAndEmailDto);
         
         // Assert
         act.Should().Throw<InvalidOperationException>()

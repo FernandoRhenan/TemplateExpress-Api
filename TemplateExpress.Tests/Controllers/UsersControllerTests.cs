@@ -76,4 +76,37 @@ public class UsersControllerTests
         userValidationMock.Verify(v => v.ValidateAsync(It.IsAny<CreateUserDto>(), It.IsAny<CancellationToken>()), Times.Never());
     
     }
+    
+    [Fact(DisplayName = "Given a User, when it is conflicting, then should return Conflict.")]
+    public async Task PostTest_ConflictingUser()
+    {
+        // Arrange
+        var userServiceMock = new Mock<IUserService>();
+        var userValidationMock = new Mock<IValidator<CreateUserDto>>();
+        var usersController = new UsersController(userServiceMock.Object);
+        
+        var createUserDto = new CreateUserDto("test@test.com", "test_user", "12L0d1xP-!@dX");
+        var errorMessages = new List<IErrorMessage> 
+        { 
+            new ErrorMessage("Invalid input", "Check the fields.") 
+        };
+        
+        var mockServiceResponse = Result<UserEmailDto>.Failure(new Error((byte)ErrorCodes.EmailAlreadyExists, (byte)ErrorTypes.BusinessLogicValidationError, errorMessages));
+        userServiceMock.Setup(s => s.CreateUserAsync(userValidationMock.Object, createUserDto)).ReturnsAsync(mockServiceResponse);
+    
+        // Act
+        var result = await usersController.PostUser(userValidationMock.Object, createUserDto);
+    
+        var conflictObjectResult = result as ConflictObjectResult;
+        var resultValue = conflictObjectResult?.Value as Error;
+    
+        // Assert
+        result.Should().BeOfType<ConflictObjectResult>("the user username already exists.");
+        resultValue?.Code.Should().Be((byte)ErrorCodes.EmailAlreadyExists);
+        resultValue?.Type.Should().Be((byte)ErrorTypes.BusinessLogicValidationError);
+        userServiceMock.Verify(s => s.CreateUserAsync(userValidationMock.Object, createUserDto), Times.Once());
+        userValidationMock.Verify(v => v.ValidateAsync(It.IsAny<CreateUserDto>(), It.IsAny<CancellationToken>()), Times.Never());
+    
+    }
+    
 }

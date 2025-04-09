@@ -4,5 +4,5 @@ namespace TemplateExpress.Api.Interfaces.Security;
 
 public interface ITokenManager
 {
-    string GenerateEmailConfirmationTokenAsync(UserIdAndEmailDto userIdAndEmailDto);
+    string GenerateEmailConfirmationToken(UserIdAndEmailDto userIdAndEmailDto);
 }

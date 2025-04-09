@@ -5,35 +5,26 @@ using TemplateExpress.Api.Interfaces.Repositories;
 
 namespace TemplateExpress.Api.Repositories;
 
-public class UserRepository : IUserRepository
+public class UserRepository : RepositoryBase, IUserRepository
 {
-
-    private readonly DataContext _context;
-
-    public UserRepository(DataContext context)
-    {
-        _context = context;
-    }
+    public UserRepository(DataContext context) : base(context){} 
     
-    public async Task<UserEntity> InsertUserAsync(UserEntity user)
+    public UserEntity InsertUser(UserEntity user)
     {
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
+        Context.Users.Add(user);
         return user;
     }
 
-    public async Task<EmailConfirmationTokenEntity> InsertEmailConfirmationTokenAsync(
+    public EmailConfirmationTokenEntity InsertEmailConfirmationToken(
         EmailConfirmationTokenEntity emailConfirmationToken)
     {
-        _context.EmailConfirmationTokens.Add(emailConfirmationToken);
-        await _context.SaveChangesAsync();
+        Context.EmailConfirmationTokens.Add(emailConfirmationToken);
         return emailConfirmationToken;
     }
     public async Task<bool> FindAnEmailAsync(string email)
     {
-        var thereIsAnEmail = await _context.Users.AnyAsync(u => u.Email == email);
+        var thereIsAnEmail = await Context.Users.AnyAsync(u => u.Email == email);
         return thereIsAnEmail;
     }
-
 
 }

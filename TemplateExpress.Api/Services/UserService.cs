@@ -1,3 +1,4 @@
+using System.Security;
 using FluentValidation;
 using TemplateExpress.Api.Dto.UserDto;
 using TemplateExpress.Api.Entities;
@@ -15,7 +16,6 @@ public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
     private readonly IServiceProvider _serviceProvider;
-
     public UserService(IServiceProvider serviceProvider, IUserRepository userRepository)
     {
         _userRepository = userRepository;
@@ -43,36 +43,53 @@ public class UserService : IUserService
         var thereIsEmail = await _userRepository.FindAnEmailAsync(createUserDto.Email);
         if (thereIsEmail)
         {
-            return Result<UserEmailDto>.Success(new UserEmailDto(createUserDto.Email));
+            List<IErrorMessage> errorMessages = [new ErrorMessage("This email already in use.", "Try another email.")];
+            Error error = new((byte)ErrorCodes.EmailAlreadyExists, (byte)ErrorTypes.BusinessLogicValidationError, errorMessages);
+            return Result<UserEmailDto>.Failure(error);
         }
         
         var createTime = DateTime.Now;
         
-        var userEntity = new UserEntity
+        await using var transaction = await _userRepository.BeginTransactionAsync();
+        try
         {
-            Email = createUserDto.Email,
-            Username = createUserDto.Username,
-            Password = BCryptUtil.HashPassword(createUserDto.Password, 12),
-            CreatedAt = createTime,
-            UpdatedAt = createTime,
-        };
-        
-        var createdUser = await _userRepository.InsertUserAsync(userEntity);
+            var userEntity = new UserEntity
+            {
+                Email = createUserDto.Email,
+                Username = createUserDto.Username,
+                Password = BCryptUtil.HashPassword(createUserDto.Password, 12),
+                CreatedAt = createTime,
+                UpdatedAt = createTime,
+            };
 
-        ITokenManager tokenManager = _serviceProvider.GetRequiredService<ITokenManager>();
-        var token = tokenManager.GenerateEmailConfirmationTokenAsync(new UserIdAndEmailDto(createdUser.Id, userEntity.Email));
+            var createdUser = _userRepository.InsertUser(userEntity);
+            await _userRepository.SaveChangesAsync();
 
-        var tokenEntity = new EmailConfirmationTokenEntity
+            ITokenManager tokenManager = _serviceProvider.GetRequiredService<ITokenManager>();
+            var token = tokenManager.GenerateEmailConfirmationToken(
+                new UserIdAndEmailDto(createdUser.Id, createdUser.Email)
+            );
+
+            var tokenEntity = new EmailConfirmationTokenEntity
+            {
+                Token = token,
+                UserId = createdUser.Id,
+                CreatedAt = createTime,
+                UpdatedAt = createTime
+            };
+
+            _userRepository.InsertEmailConfirmationToken(tokenEntity);
+            await _userRepository.SaveChangesAsync();
+
+            await transaction.CommitAsync();
+
+            return Result<UserEmailDto>.Success(new UserEmailDto(createdUser.Email));
+        }
+        catch
         {
-            Token = token,
-            UserId = createdUser.Id,
-            CreatedAt = createTime,
-            UpdatedAt = createTime
-        };
-        
-        await _userRepository.InsertEmailConfirmationTokenAsync(tokenEntity);
-        
-        return Result<UserEmailDto>.Success(new UserEmailDto(createdUser.Email));
+            await transaction.RollbackAsync();
+            throw new SecurityException("An error occured while trying to create the user.");
+        }
 
     }
 }
