@@ -1,4 +1,4 @@
-using System.Security;
+using System.Transactions;
 using FluentValidation;
 using TemplateExpress.Api.Dto.UserDto;
 using TemplateExpress.Api.Entities;
@@ -97,7 +97,7 @@ public class UserService : IUserService
         catch (Exception ex)
         {
             await transaction.RollbackAsync();
-            throw new SecurityException("An error occured while trying to create the user.", ex);
+            throw new TransactionException("An error occured while trying to create the user.", ex);
         }
 
     }

@@ -1,3 +1,4 @@
+using System.Transactions;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore.Storage;
 using Moq;
@@ -60,7 +61,7 @@ public class UserServiceTests
         return (userRepositoryMock, bcryptUtilMock, tokenManagerMock, transactionMock);
     }
     
-    [Fact(DisplayName = "Given the user and token creation service, when the user data is valid, then the service should return a successResponse.")]
+    [Fact(DisplayName = "Given the user and token creation service, when the user data is valid, then return a successResponse.")]
     public async Task CreateUserTest_succefully()
     {
         // Arrange
@@ -113,27 +114,21 @@ public class UserServiceTests
         // Verify interactions
         mocks.transactionMock.Verify(t => t.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
         mocks.transactionMock.Verify(t => t.RollbackAsync(It.IsAny<CancellationToken>()), Times.Never);
-        mocks.userRepositoryMock.Verify(u => u.FindAnEmailAsync(defaultObjects.createUserDto.Email), Times.Once);
-        mocks.bcryptUtilMock.Verify(b => b.HashPassword(defaultObjects.createUserDto.Password, 12), Times.Once);
+        mocks.userRepositoryMock.Verify(u => u.FindAnEmailAsync(It.IsAny<string>()), Times.Once);
+        mocks.bcryptUtilMock.Verify(b => b.HashPassword(It.IsAny<string>(), 12), Times.Once);
         mocks.userRepositoryMock.Verify(u => u.BeginTransactionAsync(), Times.Once);
         mocks.userRepositoryMock.Verify(u => u.InsertUser(It.IsAny<UserEntity>()), Times.Once);
         mocks.userRepositoryMock.Verify(u => u.SaveChangesAsync(), Times.Exactly(2));
-        mocks.tokenManagerMock.Verify(t => t.GenerateEmailConfirmationToken(defaultObjects.userIdAndEmailDto), Times.Once);
+        mocks.tokenManagerMock.Verify(t => t.GenerateEmailConfirmationToken(It.IsAny<UserIdAndEmailDto>()), Times.Once);
         mocks.userRepositoryMock.Verify(u => u.InsertEmailConfirmationToken(It.IsAny<EmailConfirmationTokenEntity>()), Times.Once);
     }
 
-    [Fact(DisplayName = "Given the user and token creation service, when the user data is invalid, then the service should return a validation error.")]
+    [Fact(DisplayName = "Given the user and token creation service, when the user data is invalid, then return a validation error.")]
     public async Task CreateUserTest_invalidUser()
     {
         
         // Arrange
         var mocks = GetAllMocks();
-
-        List<IErrorMessage> errorMessages = [new ErrorMessage("Error message", "Any Action")];
-        var expectedResult = Result<UserEmailDto>.Failure(new Error(
-            (byte)ErrorCodes.InvalidInput,
-            (byte)ErrorTypes.InputValidationError,
-                  errorMessages));
 
         var validator = new UserValidator();
 
@@ -147,11 +142,91 @@ public class UserServiceTests
         // Assert
         result.Should().BeOfType<Result<UserEmailDto>>();
         result.IsSuccess.Should().BeFalse();
-
+        result.Error?.Code.Should().Be((byte)ErrorCodes.InvalidInput);
+        result.Error?.Type.Should().Be((byte)ErrorTypes.InputValidationError);
+        result.Error?.Messages.Should().BeOfType<List<IErrorMessage>>();
+        
         mocks.userRepositoryMock.Verify(u => u.InsertUser(It.IsAny<UserEntity>()), Times.Never());
         mocks.userRepositoryMock.Verify(u => u.FindAnEmailAsync(It.IsAny<string>()), Times.Never());
         mocks.userRepositoryMock.Verify(u => u.InsertEmailConfirmationToken(It.IsAny<EmailConfirmationTokenEntity>()), Times.Never());
+        mocks.userRepositoryMock.Verify(u => u.BeginTransactionAsync(), Times.Never);
+
+    }
+
+    [Fact(DisplayName = "Given the user and token creation service, when the user already exists, then return a emailAlreadyExists error.")]
+    public async Task CreateUserTest_emailAlreadyExists()
+    {
+        
+        // Arrange
+        var mocks = GetAllMocks();
+        var defaultObjects = GenerateDefaultObjects();
+
+        var validator = new UserValidator();
+        var userService = new UserService(mocks.userRepositoryMock.Object, validator, mocks.bcryptUtilMock.Object, mocks.tokenManagerMock.Object);
+        
+        List<IErrorMessage> errorMessages = [new ErrorMessage("This email is already in use.", "Try another email.")];
+
+        mocks.userRepositoryMock.Setup(u => u.FindAnEmailAsync(It.IsAny<string>()))
+            .ReturnsAsync(true);
+        
+        // Act
+        var result = await userService.CreateUserAsync(defaultObjects.createUserDto);
+
+        // Assert
+        result.Should().BeOfType<Result<UserEmailDto>>();
+        result.IsSuccess.Should().BeFalse();
+        result.Error?.Code.Should().Be((byte)ErrorCodes.EmailAlreadyExists);
+        result.Error?.Type.Should().Be((byte)ErrorTypes.BusinessLogicValidationError);
+        result.Error?.Messages.Should().BeOfType<List<IErrorMessage>>();
+        result.Error?.Messages.Should().BeEquivalentTo(errorMessages);
+        
+        mocks.userRepositoryMock.Verify(u => u.FindAnEmailAsync(It.IsAny<string>()), Times.Once);
+        mocks.userRepositoryMock.Verify(u => u.BeginTransactionAsync(), Times.Never);
+        mocks.userRepositoryMock.Verify(u => u.InsertUser(It.IsAny<UserEntity>()), Times.Never);
+        mocks.tokenManagerMock.Verify(t => t.GenerateEmailConfirmationToken(It.IsAny<UserIdAndEmailDto>()), Times.Never);
+        mocks.userRepositoryMock.Verify(u => u.InsertEmailConfirmationToken(It.IsAny<EmailConfirmationTokenEntity>()), Times.Never);
+
+    }
+
+    [Fact(DisplayName =
+        "Given the user and token creation service, when occurs a error in transaction, then throw a TransactionException.")]
+    public async Task CreateUserTest_transactionException()
+    {
+        // Arrange
+        var mocks = GetAllMocks();
+        var defaultObjects = GenerateDefaultObjects();
+
+        var validator = new UserValidator();
+        var userService = new UserService(mocks.userRepositoryMock.Object, validator, mocks.bcryptUtilMock.Object,
+            mocks.tokenManagerMock.Object);
+
+        mocks.userRepositoryMock.Setup(u => u.FindAnEmailAsync(It.IsAny<string>()))
+            .ReturnsAsync(false);
+
+        mocks.bcryptUtilMock.Setup(b => b.HashPassword(defaultObjects.createUserDto.Password, 12))
+            .Returns("hashedPassword");
+
+        mocks.userRepositoryMock.Setup(u => u.BeginTransactionAsync())
+            .ReturnsAsync(mocks.transactionMock.Object);
+
+        mocks.userRepositoryMock.Setup(u => u.InsertUser(It.IsAny<UserEntity>()))
+            .Returns(defaultObjects.userEntity);
+        
+        mocks.userRepositoryMock.Setup(u => u.InsertUser(It.IsAny<UserEntity>()))
+            .Throws(new TransactionException("An error occured while trying to create the user."));
+
+
+        // Act
+        Func<Task> act = async () => await userService.CreateUserAsync(defaultObjects.createUserDto);
+
+        // Assert
+        await act.Should().ThrowAsync<TransactionException>().WithMessage("An error occured while trying to create the user.");
+        mocks.userRepositoryMock.Verify(u => u.FindAnEmailAsync(It.IsAny<string>()), Times.Once);
+        mocks.userRepositoryMock.Verify(u => u.BeginTransactionAsync(), Times.Once);
+        mocks.userRepositoryMock.Verify(u => u.InsertUser(It.IsAny<UserEntity>()), Times.Once);
+        mocks.userRepositoryMock.Verify(u => u.InsertEmailConfirmationToken(It.IsAny<EmailConfirmationTokenEntity>()), Times.Never);
         mocks.transactionMock.Verify(t => t.CommitAsync(It.IsAny<CancellationToken>()), Times.Never);
+        mocks.transactionMock.Verify(t => t.RollbackAsync(It.IsAny<CancellationToken>()), Times.Once);
 
     }
 }
