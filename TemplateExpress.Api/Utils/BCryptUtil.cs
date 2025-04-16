@@ -1,14 +1,14 @@
+using TemplateExpress.Api.Interfaces.Utils;
+
 namespace TemplateExpress.Api.Utils;
 
-public static class BCryptUtil
+public class BCryptUtil : IBCryptUtil
 {
-    public static string HashPassword(string password, int workFactor = 10)
-    {
-        return BCrypt.Net.BCrypt.HashPassword(password, workFactor);
-    }
+    public string HashPassword(string password, int workFactor = 12)
+    => BCrypt.Net.BCrypt.HashPassword(password, workFactor);
+    
 
-    public static bool CompareHash(string password, string hashedPassword)
-    {
-        return BCrypt.Net.BCrypt.Verify(password, hashedPassword);
-    }
+    public bool ComparePassword(string password, string hashedPassword)
+    => BCrypt.Net.BCrypt.Verify(password, hashedPassword);
+    
 }

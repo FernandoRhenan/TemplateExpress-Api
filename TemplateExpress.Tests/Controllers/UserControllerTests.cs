@@ -1,5 +1,4 @@
 using FluentAssertions;
-using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using TemplateExpress.Api.Controllers;
@@ -10,7 +9,7 @@ using TemplateExpress.Api.Results.EnumResponseTypes;
 
 namespace TemplateExpress.Tests.Controllers;
 
-public class UsersControllerTests
+public class UserControllerTests
 {
 
     [Fact(DisplayName = "Given an User, when it is valid, then should return OK.")]
@@ -19,7 +18,7 @@ public class UsersControllerTests
         
         // Arrange
         var userServiceMock = new Mock<IUserService>();
-        var usersController = new UsersController(userServiceMock.Object);
+        var userController = new UserController(userServiceMock.Object);
         
         var createUserDto = new CreateUserDto("test@test.com", "test_user", "12L0d1xP-!@dX");
         var mockServiceResponse = Result<UserEmailDto>.Success(new UserEmailDto(createUserDto.Email));
@@ -29,12 +28,13 @@ public class UsersControllerTests
             .ReturnsAsync(mockServiceResponse);
 
         // Act
-        var result = await usersController.PostUser(createUserDto);
+        var result = await userController.PostUser(createUserDto);
+        
+        // Assert
         var okObjectResult = result as OkObjectResult;
         var resultValue = okObjectResult?.Value as UserEmailDto;
 
-        // Assert
-        result.Should().BeOfType<OkObjectResult>("the user was created successfully.");
+        result.Should().BeOfType<OkObjectResult>();
         resultValue?.Email.Should().NotBeNull().And.Be(createUserDto.Email);
         userServiceMock.Verify(s => s.CreateUserAsync(createUserDto), Times.Once());
     }
@@ -44,7 +44,7 @@ public class UsersControllerTests
     {
         // Arrange
         var userServiceMock = new Mock<IUserService>();
-        var usersController = new UsersController(userServiceMock.Object);
+        var usersController = new UserController(userServiceMock.Object);
         
         var createUserDto = new CreateUserDto("test@test.com", "test_user", "12L0d1xP-!@dX");
         var errorMessages = new List<IErrorMessage> 
@@ -78,7 +78,7 @@ public class UsersControllerTests
     {
         // Arrange
         var userServiceMock = new Mock<IUserService>();
-        var usersController = new UsersController(userServiceMock.Object);
+        var usersController = new UserController(userServiceMock.Object);
         
         var createUserDto = new CreateUserDto("test@test.com", "test_user", "12L0d1xP-!@dX");
         var errorMessages = new List<IErrorMessage> 
