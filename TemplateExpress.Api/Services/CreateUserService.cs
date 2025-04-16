@@ -12,13 +12,13 @@ using ValidationResult = FluentValidation.Results.ValidationResult;
 
 namespace TemplateExpress.Api.Services;
 
-public class UserService : IUserService
+public class CreateUserService : IUserService
 {
     private readonly IUserRepository _userRepository;
     private readonly IValidator<CreateUserDto> _validator;
     private readonly IBCryptUtil _bCryptUtil;
     private readonly ITokenManager _tokenManager;
-    public UserService(
+    public CreateUserService(
         IUserRepository userRepository,
         IValidator<CreateUserDto> validator,
         IBCryptUtil bCryptUtil,
@@ -74,7 +74,6 @@ public class UserService : IUserService
 
             var createdUser = _userRepository.InsertUser(userEntity);
             await _userRepository.SaveChangesAsync();
-
 
             var userIdAndEmailDto = new UserIdAndEmailDto(createdUser.Id, createdUser.Email); 
             var token = _tokenManager.GenerateEmailConfirmationToken(userIdAndEmailDto);

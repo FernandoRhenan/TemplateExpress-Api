@@ -7,13 +7,13 @@ using TemplateExpress.Api.Interfaces.Services;
 using TemplateExpress.Api.Results;
 using TemplateExpress.Api.Results.EnumResponseTypes;
 
-namespace TemplateExpress.Tests.Controllers;
+namespace TemplateExpress.Tests.Controllers.Users;
 
-public class UserControllerTests
+public class PostTest
 {
 
     [Fact(DisplayName = "Given an User, when it is valid, then should return OK.")]
-    public async Task PostTest_ValidUser()
+    public async Task ValidUser()
     {
         
         // Arrange
@@ -40,7 +40,7 @@ public class UserControllerTests
     }
 
     [Fact(DisplayName = "Given an User, when it is invalid, then should return BadRequest.")]
-    public async Task PostTest_InvalidUser()
+    public async Task InvalidUser()
     {
         // Arrange
         var userServiceMock = new Mock<IUserService>();
@@ -74,7 +74,7 @@ public class UserControllerTests
     }
     
     [Fact(DisplayName = "Given a User, when it is conflicting, then should return Conflict.")]
-    public async Task PostTest_ConflictingUser()
+    public async Task ConflictingUser()
     {
         // Arrange
         var userServiceMock = new Mock<IUserService>();

@@ -12,9 +12,9 @@ using TemplateExpress.Api.Results.EnumResponseTypes;
 using TemplateExpress.Api.Services;
 using TemplateExpress.Api.Validations;
 
-namespace TemplateExpress.Tests.Services;
+namespace TemplateExpress.Tests.Services.Users;
 
-public class UserServiceTests
+public class CreateUserAsync
 {
 
     private static readonly DateTime Now = DateTime.Now;
@@ -62,7 +62,7 @@ public class UserServiceTests
     }
     
     [Fact(DisplayName = "Given the user and token creation service, when the user data is valid, then return a successResponse.")]
-    public async Task CreateUserTest_succefully()
+    public async Task Success()
     {
         // Arrange
         var defaultObjects = GenerateDefaultObjects();
@@ -100,7 +100,7 @@ public class UserServiceTests
         mocks.userRepositoryMock.Setup(u => u.InsertEmailConfirmationToken(It.IsAny<EmailConfirmationTokenEntity>()))
                           .Returns(defaultObjects.emailConfirmationTokenEntity);
 
-        var userService = new UserService(mocks.userRepositoryMock.Object, validator, mocks.bcryptUtilMock.Object, mocks.tokenManagerMock.Object);
+        var userService = new CreateUserService(mocks.userRepositoryMock.Object, validator, mocks.bcryptUtilMock.Object, mocks.tokenManagerMock.Object);
 
         // Act
         var result = await userService.CreateUserAsync(defaultObjects.createUserDto);
@@ -124,7 +124,7 @@ public class UserServiceTests
     }
 
     [Fact(DisplayName = "Given the user and token creation service, when the user data is invalid, then return a validation error.")]
-    public async Task CreateUserTest_invalidUser()
+    public async Task InvalidUser()
     {
         
         // Arrange
@@ -132,7 +132,7 @@ public class UserServiceTests
 
         var validator = new UserValidator();
 
-        var userService = new UserService(mocks.userRepositoryMock.Object, validator, mocks.bcryptUtilMock.Object, mocks.tokenManagerMock.Object);
+        var userService = new CreateUserService(mocks.userRepositoryMock.Object, validator, mocks.bcryptUtilMock.Object, mocks.tokenManagerMock.Object);
 
         var invalidCreateUserDto = new CreateUserDto("", "test1", "123123");
         
@@ -154,7 +154,7 @@ public class UserServiceTests
     }
 
     [Fact(DisplayName = "Given the user and token creation service, when the user already exists, then return a emailAlreadyExists error.")]
-    public async Task CreateUserTest_emailAlreadyExists()
+    public async Task EmailAlreadyExists()
     {
         
         // Arrange
@@ -162,7 +162,7 @@ public class UserServiceTests
         var defaultObjects = GenerateDefaultObjects();
 
         var validator = new UserValidator();
-        var userService = new UserService(mocks.userRepositoryMock.Object, validator, mocks.bcryptUtilMock.Object, mocks.tokenManagerMock.Object);
+        var userService = new CreateUserService(mocks.userRepositoryMock.Object, validator, mocks.bcryptUtilMock.Object, mocks.tokenManagerMock.Object);
         
         List<IErrorMessage> errorMessages = [new ErrorMessage("This email is already in use.", "Try another email.")];
 
@@ -190,14 +190,14 @@ public class UserServiceTests
 
     [Fact(DisplayName =
         "Given the user and token creation service, when occurs a error in transaction, then throw a TransactionException.")]
-    public async Task CreateUserTest_transactionException()
+    public async Task TransactionException()
     {
         // Arrange
         var mocks = GetAllMocks();
         var defaultObjects = GenerateDefaultObjects();
 
         var validator = new UserValidator();
-        var userService = new UserService(mocks.userRepositoryMock.Object, validator, mocks.bcryptUtilMock.Object,
+        var userService = new CreateUserService(mocks.userRepositoryMock.Object, validator, mocks.bcryptUtilMock.Object,
             mocks.tokenManagerMock.Object);
 
         mocks.userRepositoryMock.Setup(u => u.FindAnEmailAsync(It.IsAny<string>()))

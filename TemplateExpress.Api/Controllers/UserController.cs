@@ -1,4 +1,3 @@
-using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using TemplateExpress.Api.Dto.UserDto;
 using TemplateExpress.Api.Interfaces.Services;
