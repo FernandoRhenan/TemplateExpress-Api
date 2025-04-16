@@ -33,8 +33,7 @@ public class UserService : IUserService
 
     public async Task<Result<UserEmailDto>> CreateUserAsync(CreateUserDto createUserDto)
     {
-
-            ValidationResult validationResult = await _validator.ValidateAsync(createUserDto);
+        ValidationResult validationResult = await _validator.ValidateAsync(createUserDto);
             
         if (!validationResult.IsValid)
         {
@@ -64,7 +63,7 @@ public class UserService : IUserService
         {
             Email = createUserDto.Email,
             Username = createUserDto.Username,
-            Password = _bCryptUtil.HashPassword(createUserDto.Password, 12),
+            Password = _bCryptUtil.HashPassword(createUserDto.Password),
             CreatedAt = createTime,
             UpdatedAt = createTime,
         };
