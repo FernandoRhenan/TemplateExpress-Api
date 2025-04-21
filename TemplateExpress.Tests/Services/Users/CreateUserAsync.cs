@@ -100,7 +100,7 @@ public class CreateUserAsync
         mocks.userRepositoryMock.Setup(u => u.InsertEmailConfirmationToken(It.IsAny<EmailConfirmationTokenEntity>()))
                           .Returns(defaultObjects.emailConfirmationTokenEntity);
 
-        var userService = new CreateUserService(mocks.userRepositoryMock.Object, validator, mocks.bcryptUtilMock.Object, mocks.tokenManagerMock.Object);
+        var userService = new UserService(mocks.userRepositoryMock.Object, validator, mocks.bcryptUtilMock.Object, mocks.tokenManagerMock.Object);
 
         // Act
         var result = await userService.CreateUserAsync(defaultObjects.createUserDto);
@@ -132,7 +132,7 @@ public class CreateUserAsync
 
         var validator = new UserValidator();
 
-        var userService = new CreateUserService(mocks.userRepositoryMock.Object, validator, mocks.bcryptUtilMock.Object, mocks.tokenManagerMock.Object);
+        var userService = new UserService(mocks.userRepositoryMock.Object, validator, mocks.bcryptUtilMock.Object, mocks.tokenManagerMock.Object);
 
         var invalidCreateUserDto = new CreateUserDto("", "test1", "123123");
         
@@ -162,7 +162,7 @@ public class CreateUserAsync
         var defaultObjects = GenerateDefaultObjects();
 
         var validator = new UserValidator();
-        var userService = new CreateUserService(mocks.userRepositoryMock.Object, validator, mocks.bcryptUtilMock.Object, mocks.tokenManagerMock.Object);
+        var userService = new UserService(mocks.userRepositoryMock.Object, validator, mocks.bcryptUtilMock.Object, mocks.tokenManagerMock.Object);
         
         List<IErrorMessage> errorMessages = [new ErrorMessage("This email is already in use.", "Try another email.")];
 
@@ -197,7 +197,7 @@ public class CreateUserAsync
         var defaultObjects = GenerateDefaultObjects();
 
         var validator = new UserValidator();
-        var userService = new CreateUserService(mocks.userRepositoryMock.Object, validator, mocks.bcryptUtilMock.Object,
+        var userService = new UserService(mocks.userRepositoryMock.Object, validator, mocks.bcryptUtilMock.Object,
             mocks.tokenManagerMock.Object);
 
         mocks.userRepositoryMock.Setup(u => u.FindAnEmailAsync(It.IsAny<string>()))
