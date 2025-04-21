@@ -73,7 +73,7 @@ public class PostTest
     
     }
     
-    [Fact(DisplayName = "Given a User, when it is conflicting, then should return Conflict.")]
+    [Fact(DisplayName = "Given an User, when it is conflicting, then should return Conflict.")]
     public async Task ConflictingUser()
     {
         // Arrange

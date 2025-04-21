@@ -20,7 +20,8 @@ var connectionString = builder.Configuration.GetConnectionString("Postgres");
 
 builder.Services.AddDbContext<DataContext>(opt => opt.UseNpgsql(connectionString));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IUserService, CreateUserService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddTransient<IEmailService, EmailService>();
 
 builder.Services.AddScoped<ITokenManager, TokenManager>();
 builder.Services.AddScoped<IBCryptUtil, BCryptUtil>();
@@ -32,6 +33,9 @@ builder.Services.AddScoped<IValidator<CreateUserDto>, UserValidator>();
 
 builder.Services.Configure<JwtOptions>(
     builder.Configuration.GetSection(JwtOptions.Section));
+
+builder.Services.Configure<EmailConfiguration>(
+    builder.Configuration.GetSection(EmailConfiguration.Section));
 
 
 builder.Services.AddControllers();
