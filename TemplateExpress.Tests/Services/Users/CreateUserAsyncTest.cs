@@ -20,6 +20,7 @@ public class CreateUserAsyncTest
     private static readonly DateTime Now = DateTime.Now;
     private static readonly Random Random = new();
     
+    // TODO: Review this method and check de logic
     private (UserEntity userEntity, CreateUserDto createUserDto, UserIdAndEmailDto userIdAndEmailDto, UserEmailDto userEmailDto) GenerateDefaultObjects()
     {
         var userId = Random.Next(1, 50_000);
@@ -42,6 +43,7 @@ public class CreateUserAsyncTest
         return (userEntity, createUserDto, userIdAndEmailDto, userEmailDto);
     }
 
+    // TODO: Review this method and check de logic
     private (Mock<IUserRepository> userRepositoryMock, Mock<IBCryptUtil> bcryptUtilMock, Mock<ITokenManager>
         tokenManagerMock, Mock<IDbContextTransaction> transactionMock) GetAllMocks()
     {
@@ -52,6 +54,8 @@ public class CreateUserAsyncTest
         return (userRepositoryMock, bcryptUtilMock, tokenManagerMock, transactionMock);
     }
     
+    
+    // TODO: Review this test and check de logic
     [Fact(DisplayName = "Given the user and token creation service, when the user data is valid, then return a successResponse.")]
     public async Task Success()
     {
@@ -60,9 +64,9 @@ public class CreateUserAsyncTest
         
         var mocks = GetAllMocks();
         
-        var jwtConfirmationAccountToken = new JwtConfirmationAccountToken("token");
+        var jwtConfirmationAccountToken = new JwtConfirmationAccountTokenDto("token");
         
-        var expectedResult = Result<JwtConfirmationAccountToken>.Success(jwtConfirmationAccountToken);
+        var expectedResult = Result<JwtConfirmationAccountTokenDto>.Success(jwtConfirmationAccountToken);
         
         var validator = new UserValidator();
 
@@ -96,7 +100,7 @@ public class CreateUserAsyncTest
         var result = await userService.CreateUserAsync(defaultObjects.createUserDto);
 
         // Assert
-        result.Should().BeOfType<Result<JwtConfirmationAccountToken>>();
+        result.Should().BeOfType<Result<JwtConfirmationAccountTokenDto>>();
         result.Should().BeEquivalentTo(expectedResult);
         result.IsSuccess.Should().BeTrue();
         result.Error.Should().BeNull();
@@ -112,6 +116,7 @@ public class CreateUserAsyncTest
         mocks.tokenManagerMock.Verify(t => t.GenerateEmailConfirmationToken(It.IsAny<UserIdAndEmailDto>()), Times.Once);
     }
 
+    // TODO: Review this test and check de logic
     [Fact(DisplayName = "Given the user and token creation service, when the user data is invalid, then return a validation error.")]
     public async Task InvalidUser()
     {
@@ -129,7 +134,7 @@ public class CreateUserAsyncTest
         var result = await userService.CreateUserAsync(invalidCreateUserDto);
 
         // Assert
-        result.Should().BeOfType<Result<JwtConfirmationAccountToken>>();
+        result.Should().BeOfType<Result<JwtConfirmationAccountTokenDto>>();
         result.IsSuccess.Should().BeFalse();
         result.Error?.Code.Should().Be((byte)ErrorCodes.InvalidInput);
         result.Error?.Type.Should().Be((byte)ErrorTypes.InputValidationError);
@@ -141,6 +146,7 @@ public class CreateUserAsyncTest
 
     }
 
+    // TODO: Review this test and check de logic
     [Fact(DisplayName = "Given the user and token creation service, when the user already exists, then return a emailAlreadyExists error.")]
     public async Task EmailAlreadyExists()
     {
@@ -161,7 +167,7 @@ public class CreateUserAsyncTest
         var result = await userService.CreateUserAsync(defaultObjects.createUserDto);
 
         // Assert
-        result.Should().BeOfType<Result<JwtConfirmationAccountToken>>();
+        result.Should().BeOfType<Result<JwtConfirmationAccountTokenDto>>();
         result.IsSuccess.Should().BeFalse();
         result.Error?.Code.Should().Be((byte)ErrorCodes.EmailAlreadyExists);
         result.Error?.Type.Should().Be((byte)ErrorTypes.BusinessLogicValidationError);
@@ -175,8 +181,8 @@ public class CreateUserAsyncTest
 
     }
 
-    [Fact(DisplayName =
-        "Given the user and token creation service, when occurs a error in transaction, then throw a TransactionException.")]
+    // TODO: Review this test and check de logic
+    [Fact(DisplayName = "Given the user and token creation service, when occurs a error in transaction, then throw a TransactionException.")]
     public async Task TransactionException()
     {
         // Arrange

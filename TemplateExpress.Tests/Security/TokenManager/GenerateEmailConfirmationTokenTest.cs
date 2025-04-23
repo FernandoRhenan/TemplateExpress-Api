@@ -1,20 +1,21 @@
+namespace TemplateExpress.Tests.Security.TokenManager;
+
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using FluentAssertions;
 using Microsoft.Extensions.Options;
-using TemplateExpress.Api.Dto.UserDto;
-using TemplateExpress.Api.Options;
+using Api.Dto.UserDto;
+using Api.Options;
 using TemplateExpress.Api.Security;
 
-namespace TemplateExpress.Tests.Security;
 
-public class TokenManagerTests
+public class GenerateEmailConfirmationTokenTest
 {
     [Fact(DisplayName = "Given the Email Confirmation Token Generation, when JWT secret is provided, then returns the token successfully")]
-    public void GenerateEmailConfirmationTokenAsync_ValidUserAndSecret()
+    public void ValidUserAndSecret()
     {
         // Arrange
-        IOptions<JwtOptions> jwtOptions = Options.Create(new JwtOptions());
+        IOptions<JwtConfirmationOptions> jwtOptions = Options.Create(new JwtConfirmationOptions());
         jwtOptions.Value.Secret = "testSecretKeyThatHaveMoreThan128Bits";
         var userIdAndEmailDto = new UserIdAndEmailDto(1, "test@test.com");
         var tokenManagerSecurity = new TokenManager(jwtOptions);
@@ -51,10 +52,10 @@ public class TokenManagerTests
     }
 
     [Fact(DisplayName = "Given the Email Confirmation Token Generation, when JWT secret is not provided, then returns an exception.")]
-    public void GenerateEmailConfirmationTokenAsync_ValidUserAndInvalidSecret()
+    public void ValidUserAndInvalidSecret()
     {
         // Arrange
-        IOptions<JwtOptions> jwtOptions = Options.Create(new JwtOptions());
+        IOptions<JwtConfirmationOptions> jwtOptions = Options.Create(new JwtConfirmationOptions());
         jwtOptions.Value.Secret = "";
         var userIdAndEmailDto = new UserIdAndEmailDto(1, "test@test.com");
         var tokenManagerSecurity = new TokenManager(jwtOptions);

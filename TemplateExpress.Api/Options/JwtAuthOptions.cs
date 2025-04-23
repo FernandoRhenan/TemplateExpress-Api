@@ -1,7 +1,7 @@
 namespace TemplateExpress.Api.Options;
 
-public class JwtOptions
+public class JwtAuthOptions
 {
-    public const string Section = "JwtOptions";
+    public const string Section = "JwtAuthOptions";
     public string? Secret { get; set; }
 }

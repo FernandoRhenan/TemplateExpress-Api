@@ -31,8 +31,8 @@ builder.Services.AddTransient<GlobalExceptionHandlingMiddleware>();
 // TODO Add it in a extension method.
 builder.Services.AddScoped<IValidator<CreateUserDto>, UserValidator>();
 
-builder.Services.Configure<JwtOptions>(
-    builder.Configuration.GetSection(JwtOptions.Section));
+builder.Services.Configure<JwtConfirmationOptions>(
+    builder.Configuration.GetSection(JwtConfirmationOptions.Section));
 
 builder.Services.Configure<EmailConfiguration>(
     builder.Configuration.GetSection(EmailConfiguration.Section));

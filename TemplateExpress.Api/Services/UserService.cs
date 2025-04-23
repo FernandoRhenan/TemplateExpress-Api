@@ -31,7 +31,7 @@ public class UserService : IUserService
         _tokenManager = tokenManager;
     }   
 
-    public async Task<Result<JwtConfirmationAccountToken>> CreateUserAsync(CreateUserDto createUserDto)
+    public async Task<Result<JwtConfirmationAccountTokenDto>> CreateUserAsync(CreateUserDto createUserDto)
     {
         ValidationResult validationResult = await _validator.ValidateAsync(createUserDto);
             
@@ -42,7 +42,7 @@ public class UserService : IUserService
                 .Select(failure => new ErrorMessage(failure.ErrorMessage, "Fix the " + failure.PropertyName.ToLower() + " field."))
                 .ToList<IErrorMessage>();
             
-            return Result<JwtConfirmationAccountToken>.Failure(
+            return Result<JwtConfirmationAccountTokenDto>.Failure(
                 new Error(
                     (byte)ErrorCodes.InvalidInput,
                     (byte)ErrorTypes.InputValidationError,
@@ -54,7 +54,7 @@ public class UserService : IUserService
         {
             List<IErrorMessage> errorMessages = [new ErrorMessage("This email is already in use.", "Try another email.")];
             Error error = new((byte)ErrorCodes.EmailAlreadyExists, (byte)ErrorTypes.BusinessLogicValidationError, errorMessages);
-            return Result<JwtConfirmationAccountToken>.Failure(error);
+            return Result<JwtConfirmationAccountTokenDto>.Failure(error);
         }
         
         var createTime = DateTime.Now;
@@ -80,7 +80,7 @@ public class UserService : IUserService
 
             await transaction.CommitAsync();
 
-            return Result<JwtConfirmationAccountToken>.Success(new JwtConfirmationAccountToken(token));
+            return Result<JwtConfirmationAccountTokenDto>.Success(new JwtConfirmationAccountTokenDto(token));
         }
         catch (Exception ex)
         {

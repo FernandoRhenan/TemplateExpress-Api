@@ -7,5 +7,5 @@ namespace TemplateExpress.Api.Interfaces.Services;
 public interface IUserService
 {
     
-    Task<Result<JwtConfirmationAccountToken>> CreateUserAsync(CreateUserDto createUserDto);
+    Task<Result<JwtConfirmationAccountTokenDto>> CreateUserAsync(CreateUserDto createUserDto);
 }

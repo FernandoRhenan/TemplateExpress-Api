@@ -12,10 +12,10 @@ namespace TemplateExpress.Api.Security;
 public class TokenManager : ITokenManager
 {
     
-    private readonly JwtOptions _jwtOptions;
-    public TokenManager(IOptions<JwtOptions> jwtOptions)
+    private readonly JwtConfirmationOptions _jwtConfirmationOptions;
+    public TokenManager(IOptions<JwtConfirmationOptions> jwtOptions)
     {
-        _jwtOptions = jwtOptions.Value;
+        _jwtConfirmationOptions = jwtOptions.Value;
     }
     public string GenerateEmailConfirmationToken(UserIdAndEmailDto userIdAndEmailDto)
     {
@@ -23,7 +23,7 @@ public class TokenManager : ITokenManager
         var handler = new JwtSecurityTokenHandler();
 
         // Get JwtSecret
-        var jwtSecret = _jwtOptions.Secret;
+        var jwtSecret = _jwtConfirmationOptions.Secret;
         if (string.IsNullOrWhiteSpace(jwtSecret)) throw new InvalidOperationException("Missing JWT Secret.");
 
         var key = Encoding.UTF8.GetBytes(jwtSecret);
@@ -54,5 +54,38 @@ public class TokenManager : ITokenManager
         ci.AddClaim(new Claim(ClaimTypes.Name, userIdAndEmailDto.Id.ToString()));
         return ci;
     }
+
+    // TODO: It wasn't unit tested.
+    public async Task<TokenValidationResult> TokenValidation(JwtConfirmationAccountTokenDto jwtConfirmationAccountTokenDto)
+    {
+        var jwtSecret = _jwtConfirmationOptions.Secret;
+        if (string.IsNullOrWhiteSpace(jwtSecret)) throw new InvalidOperationException("Missing JWT Secret.");
+        
+        var handler = new JwtSecurityTokenHandler();
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
+
+        var validationParameters = new TokenValidationParameters
+        {
+            IssuerSigningKey = key,
+            ValidateIssuerSigningKey = true,
+            ValidateLifetime = true,
+            // ValidIssuer = "http://localhost:",
+            // ValidateIssuer = true,
+            ClockSkew = TimeSpan.Zero
+        };
+        
+        var tokenValidation = await handler.ValidateTokenAsync(jwtConfirmationAccountTokenDto.Token, validationParameters);
+
+        return tokenValidation;
+    }
     
+    // TODO: It wasn't unit tested.
+    public UserIdAndEmailDto GetJwtConfirmationAccountTokenClaims(TokenValidationResult tokenValidationResult)
+    {
+        return new UserIdAndEmailDto(0, "");
+    }
+
+    
+    // TODO: It wasn't unit tested.
+
 }
