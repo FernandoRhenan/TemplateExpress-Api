@@ -36,7 +36,7 @@ public class TokenManager : ITokenManager
         {
             SigningCredentials = credentials,
             Expires = DateTime.UtcNow.AddHours(12),
-            Subject = GenerateClaims(userIdAndEmailDto)
+            Subject = GenerateEmailConfirmationTokenClaims(userIdAndEmailDto)
         };
         
         // Generate a Token
@@ -47,7 +47,7 @@ public class TokenManager : ITokenManager
 
     }
 
-    private static ClaimsIdentity GenerateClaims(UserIdAndEmailDto userIdAndEmailDto)
+    private static ClaimsIdentity GenerateEmailConfirmationTokenClaims(UserIdAndEmailDto userIdAndEmailDto)
     {
         var ci = new ClaimsIdentity();
         ci.AddClaim(new Claim(ClaimTypes.Email, userIdAndEmailDto.Email));

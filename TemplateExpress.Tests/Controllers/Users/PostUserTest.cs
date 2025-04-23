@@ -19,9 +19,10 @@ public class PostUserTest
         // Arrange
         var userServiceMock = new Mock<IUserService>();
         var userController = new UserController(userServiceMock.Object);
+        var jwtConfirmationAccountToken = new JwtConfirmationAccountToken("token");
         
         var createUserDto = new CreateUserDto("test@test.com", "test_user", "12L0d1xP-!@dX");
-        var mockServiceResponse = Result<UserEmailDto>.Success(new UserEmailDto(createUserDto.Email));
+        var mockServiceResponse = Result<JwtConfirmationAccountToken>.Success(jwtConfirmationAccountToken);
         
         userServiceMock
             .Setup(s => s.CreateUserAsync(createUserDto))
@@ -32,10 +33,10 @@ public class PostUserTest
         
         // Assert
         var okObjectResult = result as OkObjectResult;
-        var resultValue = okObjectResult?.Value as UserEmailDto;
+        var resultValue = okObjectResult?.Value as JwtConfirmationAccountToken;
 
         result.Should().BeOfType<OkObjectResult>();
-        resultValue?.Email.Should().NotBeNull().And.Be(createUserDto.Email);
+        resultValue?.Token.Should().NotBeNull().And.Be(jwtConfirmationAccountToken.Token);
         userServiceMock.Verify(s => s.CreateUserAsync(createUserDto), Times.Once());
     }
 
@@ -52,7 +53,7 @@ public class PostUserTest
             new ErrorMessage("Invalid input", "Check the fields.") 
         };
         
-        var mockServiceResponse = Result<UserEmailDto>
+        var mockServiceResponse = Result<JwtConfirmationAccountToken>
             .Failure(new Error((byte)ErrorCodes.InvalidInput, (byte)ErrorTypes.InputValidationError, errorMessages));
         
         userServiceMock
@@ -86,7 +87,7 @@ public class PostUserTest
             new ErrorMessage("Invalid input", "Check the fields.") 
         };
         
-        var mockServiceResponse = Result<UserEmailDto>.Failure(new Error((byte)ErrorCodes.EmailAlreadyExists, (byte)ErrorTypes.BusinessLogicValidationError, errorMessages));
+        var mockServiceResponse = Result<JwtConfirmationAccountToken>.Failure(new Error((byte)ErrorCodes.EmailAlreadyExists, (byte)ErrorTypes.BusinessLogicValidationError, errorMessages));
         userServiceMock.Setup(s => s.CreateUserAsync(createUserDto)).ReturnsAsync(mockServiceResponse);
     
         // Act

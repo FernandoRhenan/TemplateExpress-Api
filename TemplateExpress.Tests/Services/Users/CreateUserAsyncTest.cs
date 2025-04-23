@@ -60,7 +60,9 @@ public class CreateUserAsyncTest
         
         var mocks = GetAllMocks();
         
-        var expectedResult = Result<string>.Success("token");
+        var jwtConfirmationAccountToken = new JwtConfirmationAccountToken("token");
+        
+        var expectedResult = Result<JwtConfirmationAccountToken>.Success(jwtConfirmationAccountToken);
         
         var validator = new UserValidator();
 
@@ -85,13 +87,16 @@ public class CreateUserAsyncTest
         mocks.userRepositoryMock.Setup(u => u.SaveChangesAsync())
                           .ReturnsAsync(1);
         
+        mocks.tokenManagerMock.Setup(t => t.GenerateEmailConfirmationToken(defaultObjects.userIdAndEmailDto))
+            .Returns("token");
+        
         var userService = new UserService(mocks.userRepositoryMock.Object, validator, mocks.bcryptUtilMock.Object, mocks.tokenManagerMock.Object);
 
         // Act
         var result = await userService.CreateUserAsync(defaultObjects.createUserDto);
 
         // Assert
-        result.Should().BeOfType<Result<string>>();
+        result.Should().BeOfType<Result<JwtConfirmationAccountToken>>();
         result.Should().BeEquivalentTo(expectedResult);
         result.IsSuccess.Should().BeTrue();
         result.Error.Should().BeNull();
@@ -124,7 +129,7 @@ public class CreateUserAsyncTest
         var result = await userService.CreateUserAsync(invalidCreateUserDto);
 
         // Assert
-        result.Should().BeOfType<Result<string>>();
+        result.Should().BeOfType<Result<JwtConfirmationAccountToken>>();
         result.IsSuccess.Should().BeFalse();
         result.Error?.Code.Should().Be((byte)ErrorCodes.InvalidInput);
         result.Error?.Type.Should().Be((byte)ErrorTypes.InputValidationError);
@@ -156,7 +161,7 @@ public class CreateUserAsyncTest
         var result = await userService.CreateUserAsync(defaultObjects.createUserDto);
 
         // Assert
-        result.Should().BeOfType<Result<string>>();
+        result.Should().BeOfType<Result<JwtConfirmationAccountToken>>();
         result.IsSuccess.Should().BeFalse();
         result.Error?.Code.Should().Be((byte)ErrorCodes.EmailAlreadyExists);
         result.Error?.Type.Should().Be((byte)ErrorTypes.BusinessLogicValidationError);
