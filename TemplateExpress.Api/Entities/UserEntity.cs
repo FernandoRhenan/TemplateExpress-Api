@@ -16,7 +16,5 @@ public class UserEntity
     public bool ConfirmedAccount { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
-    
-    public EmailConfirmationTokenEntity EmailConfirmationToken { get; set; }
     public ICollection<TemplateEntity> Templates { get; set; }
 }

@@ -31,7 +31,7 @@ public class UserService : IUserService
         _tokenManager = tokenManager;
     }   
 
-    public async Task<Result<UserEmailDto>> CreateUserAsync(CreateUserDto createUserDto)
+    public async Task<Result<JwtConfirmationAccountToken>> CreateUserAsync(CreateUserDto createUserDto)
     {
         ValidationResult validationResult = await _validator.ValidateAsync(createUserDto);
             
@@ -42,7 +42,7 @@ public class UserService : IUserService
                 .Select(failure => new ErrorMessage(failure.ErrorMessage, "Fix the " + failure.PropertyName.ToLower() + " field."))
                 .ToList<IErrorMessage>();
             
-            return Result<UserEmailDto>.Failure(
+            return Result<JwtConfirmationAccountToken>.Failure(
                 new Error(
                     (byte)ErrorCodes.InvalidInput,
                     (byte)ErrorTypes.InputValidationError,
@@ -54,7 +54,7 @@ public class UserService : IUserService
         {
             List<IErrorMessage> errorMessages = [new ErrorMessage("This email is already in use.", "Try another email.")];
             Error error = new((byte)ErrorCodes.EmailAlreadyExists, (byte)ErrorTypes.BusinessLogicValidationError, errorMessages);
-            return Result<UserEmailDto>.Failure(error);
+            return Result<JwtConfirmationAccountToken>.Failure(error);
         }
         
         var createTime = DateTime.Now;
@@ -78,20 +78,9 @@ public class UserService : IUserService
             var userIdAndEmailDto = new UserIdAndEmailDto(createdUser.Id, createdUser.Email); 
             var token = _tokenManager.GenerateEmailConfirmationToken(userIdAndEmailDto);
 
-            var tokenEntity = new EmailConfirmationTokenEntity
-            {
-                Token = token,
-                UserId = createdUser.Id,
-                CreatedAt = createTime,
-                UpdatedAt = createTime
-            };
-            
-            _userRepository.InsertEmailConfirmationToken(tokenEntity);
-            await _userRepository.SaveChangesAsync();
-
             await transaction.CommitAsync();
 
-            return Result<UserEmailDto>.Success(new UserEmailDto(createdUser.Email));
+            return Result<JwtConfirmationAccountToken>.Success(new JwtConfirmationAccountToken(token));
         }
         catch (Exception ex)
         {

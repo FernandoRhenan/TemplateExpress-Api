@@ -12,8 +12,8 @@ using TemplateExpress.Api.Data;
 namespace TemplateExpress.Api.Data.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20250409154959_FirstMigrations")]
-    partial class FirstMigrations
+    [Migration("20250422234736_FirstMigration")]
+    partial class FirstMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,38 +24,6 @@ namespace TemplateExpress.Api.Data.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
-
-            modelBuilder.Entity("TemplateExpress.Api.Entities.EmailConfirmationTokenEntity", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<string>("Token")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<long>("UserId")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Token")
-                        .IsUnique();
-
-                    b.HasIndex("UserId")
-                        .IsUnique();
-
-                    b.ToTable("EmailConfirmationTokens");
-                });
 
             modelBuilder.Entity("TemplateExpress.Api.Entities.TemplateEntity", b =>
                 {
@@ -190,17 +158,6 @@ namespace TemplateExpress.Api.Data.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("TemplateExpress.Api.Entities.EmailConfirmationTokenEntity", b =>
-                {
-                    b.HasOne("TemplateExpress.Api.Entities.UserEntity", "User")
-                        .WithOne("EmailConfirmationToken")
-                        .HasForeignKey("TemplateExpress.Api.Entities.EmailConfirmationTokenEntity", "UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("TemplateExpress.Api.Entities.TemplateEntity", b =>
                 {
                     b.HasOne("TemplateExpress.Api.Entities.UserEntity", "User")
@@ -230,9 +187,6 @@ namespace TemplateExpress.Api.Data.Migrations
 
             modelBuilder.Entity("TemplateExpress.Api.Entities.UserEntity", b =>
                 {
-                    b.Navigation("EmailConfirmationToken")
-                        .IsRequired();
-
                     b.Navigation("Templates");
                 });
 #pragma warning restore 612, 618

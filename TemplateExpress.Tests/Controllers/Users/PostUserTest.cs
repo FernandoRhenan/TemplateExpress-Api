@@ -9,7 +9,7 @@ using TemplateExpress.Api.Results.EnumResponseTypes;
 
 namespace TemplateExpress.Tests.Controllers.Users;
 
-public class PostTest
+public class PostUserTest
 {
 
     [Fact(DisplayName = "Given an User, when it is valid, then should return OK.")]
