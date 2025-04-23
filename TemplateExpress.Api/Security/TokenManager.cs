@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Runtime.InteropServices.JavaScript;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.Extensions.Options;
@@ -6,6 +7,8 @@ using Microsoft.IdentityModel.Tokens;
 using TemplateExpress.Api.Dto.UserDto;
 using TemplateExpress.Api.Interfaces.Security;
 using TemplateExpress.Api.Options;
+using TemplateExpress.Api.Results;
+using TemplateExpress.Api.Results.EnumResponseTypes;
 
 namespace TemplateExpress.Api.Security;
 
@@ -56,7 +59,7 @@ public class TokenManager : ITokenManager
     }
 
     // TODO: It wasn't unit tested.
-    public async Task<TokenValidationResult> TokenValidation(JwtConfirmationAccountTokenDto jwtConfirmationAccountTokenDto)
+    public async Task<Result<TokenValidationResult>> TokenValidation(JwtConfirmationAccountTokenDto jwtConfirmationAccountTokenDto)
     {
         var jwtSecret = _jwtConfirmationOptions.Secret;
         if (string.IsNullOrWhiteSpace(jwtSecret)) throw new InvalidOperationException("Missing JWT Secret.");
@@ -76,13 +79,34 @@ public class TokenManager : ITokenManager
         
         var tokenValidation = await handler.ValidateTokenAsync(jwtConfirmationAccountTokenDto.Token, validationParameters);
 
-        return tokenValidation;
+        if (!tokenValidation.IsValid)
+        {
+            List<IErrorMessage> errorMessages = [new ErrorMessage("You do not have authorization for continue.", "Confirm your credentials.")];
+            return Result<TokenValidationResult>.Failure(new Error((byte)ErrorCodes.InvalidJwtToken, (byte)ErrorTypes.Unauthorized, errorMessages));
+        }
+        
+        return Result<TokenValidationResult>.Success(tokenValidation);
     }
     
     // TODO: It wasn't unit tested.
     public UserIdAndEmailDto GetJwtConfirmationAccountTokenClaims(TokenValidationResult tokenValidationResult)
     {
-        return new UserIdAndEmailDto(0, "");
+        
+        var identity = tokenValidationResult.ClaimsIdentity;
+
+        if (identity == null || !identity.Claims.Any())
+            throw new SecurityTokenException("Missing token claims.");
+
+        var idStr = identity.FindFirst("userId")?.Value;
+        var email = identity.FindFirst(ClaimTypes.Email)?.Value;
+
+        if (!long.TryParse(idStr, out var id))
+            throw new SecurityTokenException("Missing userId claim.");
+        
+        if(email == null)
+            throw new SecurityTokenException("Missing email claim.");
+
+        return new UserIdAndEmailDto(id, email);
     }
 
     

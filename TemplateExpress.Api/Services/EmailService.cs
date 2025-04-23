@@ -5,6 +5,8 @@ using TemplateExpress.Api.Dto.UserDto;
 using TemplateExpress.Api.Interfaces.Security;
 using TemplateExpress.Api.Interfaces.Services;
 using TemplateExpress.Api.Options;
+using TemplateExpress.Api.Results;
+using TemplateExpress.Api.Results.EnumResponseTypes;
 
 namespace TemplateExpress.Api.Services;
 
@@ -20,8 +22,16 @@ public class EmailService : IEmailService
         _tokenManager = tokenManager;
     }
     
-    public Task SendEmailAsync(JwtConfirmationAccountTokenDto jwtConfirmationAccountTokenDto)
+    public async Task<Result<string>> SendEmailAsync(JwtConfirmationAccountTokenDto jwtConfirmationAccountTokenDto)
     {
+        var tokenValidation = await _tokenManager.TokenValidation(jwtConfirmationAccountTokenDto);
+
+        if (!tokenValidation.IsSuccess)
+        {
+            return Result<string>.Failure(tokenValidation.Error!);
+        }
+       
+        var userIdAndEmail = _tokenManager.GetJwtConfirmationAccountTokenClaims(tokenValidation.Value!);
         
         var client = new SmtpClient(_emailOptions.Host, _emailOptions.Port)
         {
@@ -33,7 +43,7 @@ public class EmailService : IEmailService
         return client.SendMailAsync(
             new MailMessage(
                 _emailOptions.EmailSender ?? throw new NullReferenceException("Email sender missing."),
-                "userEmailDto.Email",
+                userIdAndEmail.Email,
                 "subject",
                 "message"
                 )
