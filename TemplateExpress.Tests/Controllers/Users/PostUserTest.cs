@@ -25,7 +25,7 @@ public class PostUserTest
         var mockServiceResponse = Result<JwtConfirmationAccountTokenDto>.Success(jwtConfirmationAccountToken);
         
         userServiceMock
-            .Setup(s => s.CreateUserAsync(createUserDto))
+            .Setup(s => s.CreateUserAndTokenAsync(createUserDto))
             .ReturnsAsync(mockServiceResponse);
 
         // Act
@@ -37,7 +37,7 @@ public class PostUserTest
 
         result.Should().BeOfType<OkObjectResult>();
         resultValue?.Token.Should().NotBeNull().And.Be(jwtConfirmationAccountToken.Token);
-        userServiceMock.Verify(s => s.CreateUserAsync(createUserDto), Times.Once());
+        userServiceMock.Verify(s => s.CreateUserAndTokenAsync(createUserDto), Times.Once());
     }
 
     // TODO: Review this test and check de logic
@@ -58,7 +58,7 @@ public class PostUserTest
             .Failure(new Error((byte)ErrorCodes.InvalidInput, (byte)ErrorTypes.InputValidationError, errorMessages));
         
         userServiceMock
-            .Setup(s => s.CreateUserAsync(createUserDto))
+            .Setup(s => s.CreateUserAndTokenAsync(createUserDto))
             .ReturnsAsync(mockServiceResponse);
     
         // Act
@@ -71,7 +71,7 @@ public class PostUserTest
         result.Should().BeOfType<BadRequestObjectResult>("the user wasn't created successfully.");
         resultValue?.Code.Should().Be((byte)ErrorCodes.InvalidInput);
         resultValue?.Type.Should().Be((byte)ErrorTypes.InputValidationError);
-        userServiceMock.Verify(s => s.CreateUserAsync(createUserDto), Times.Once());
+        userServiceMock.Verify(s => s.CreateUserAndTokenAsync(createUserDto), Times.Once());
     
     }
     
@@ -90,7 +90,7 @@ public class PostUserTest
         };
         
         var mockServiceResponse = Result<JwtConfirmationAccountTokenDto>.Failure(new Error((byte)ErrorCodes.EmailAlreadyExists, (byte)ErrorTypes.BusinessLogicValidationError, errorMessages));
-        userServiceMock.Setup(s => s.CreateUserAsync(createUserDto)).ReturnsAsync(mockServiceResponse);
+        userServiceMock.Setup(s => s.CreateUserAndTokenAsync(createUserDto)).ReturnsAsync(mockServiceResponse);
     
         // Act
         var result = await usersController.PostUser(createUserDto);
@@ -102,7 +102,7 @@ public class PostUserTest
         result.Should().BeOfType<ConflictObjectResult>("the user username already exists.");
         resultValue?.Code.Should().Be((byte)ErrorCodes.EmailAlreadyExists);
         resultValue?.Type.Should().Be((byte)ErrorTypes.BusinessLogicValidationError);
-        userServiceMock.Verify(s => s.CreateUserAsync(createUserDto), Times.Once());
+        userServiceMock.Verify(s => s.CreateUserAndTokenAsync(createUserDto), Times.Once());
     
     }
     

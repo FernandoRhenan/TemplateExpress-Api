@@ -97,7 +97,7 @@ public class CreateUserAsyncTest
         var userService = new UserService(mocks.userRepositoryMock.Object, validator, mocks.bcryptUtilMock.Object, mocks.tokenManagerMock.Object);
 
         // Act
-        var result = await userService.CreateUserAsync(defaultObjects.createUserDto);
+        var result = await userService.CreateUserAndTokenAsync(defaultObjects.createUserDto);
 
         // Assert
         result.Should().BeOfType<Result<JwtConfirmationAccountTokenDto>>();
@@ -131,7 +131,7 @@ public class CreateUserAsyncTest
         var invalidCreateUserDto = new CreateUserDto("", "test1", "123123");
         
         // Act
-        var result = await userService.CreateUserAsync(invalidCreateUserDto);
+        var result = await userService.CreateUserAndTokenAsync(invalidCreateUserDto);
 
         // Assert
         result.Should().BeOfType<Result<JwtConfirmationAccountTokenDto>>();
@@ -164,7 +164,7 @@ public class CreateUserAsyncTest
             .ReturnsAsync(true);
         
         // Act
-        var result = await userService.CreateUserAsync(defaultObjects.createUserDto);
+        var result = await userService.CreateUserAndTokenAsync(defaultObjects.createUserDto);
 
         // Assert
         result.Should().BeOfType<Result<JwtConfirmationAccountTokenDto>>();
@@ -210,7 +210,7 @@ public class CreateUserAsyncTest
 
 
         // Act
-        Func<Task> act = async () => await userService.CreateUserAsync(defaultObjects.createUserDto);
+        Func<Task> act = async () => await userService.CreateUserAndTokenAsync(defaultObjects.createUserDto);
 
         // Assert
         await act.Should().ThrowAsync<TransactionException>().WithMessage("An error occured while trying to create the user.");

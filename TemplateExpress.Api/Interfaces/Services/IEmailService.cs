@@ -5,5 +5,5 @@ namespace TemplateExpress.Api.Interfaces.Services;
 
 public interface IEmailService
 {
-    Task<Result<string>> SendEmailAsync(JwtConfirmationAccountTokenDto jwtConfirmationAccountTokenDto);
+    Task<Result<string>> SendEmailConfirmationTokenAsync(JwtConfirmationAccountTokenDto jwtConfirmationAccountTokenDto);
 }

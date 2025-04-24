@@ -31,7 +31,7 @@ public class UserService : IUserService
         _tokenManager = tokenManager;
     }   
 
-    public async Task<Result<JwtConfirmationAccountTokenDto>> CreateUserAsync(CreateUserDto createUserDto)
+    public async Task<Result<JwtConfirmationAccountTokenDto>> CreateUserAndTokenAsync(CreateUserDto createUserDto)
     {
         ValidationResult validationResult = await _validator.ValidateAsync(createUserDto);
             
@@ -89,4 +89,25 @@ public class UserService : IUserService
         }
 
     }
+
+    public async Task<Result<string>> ConfirmAccountAsync(JwtConfirmationAccountTokenDto jwtConfirmationAccountTokenDto)
+    {
+        var tokenValidation = await _tokenManager.TokenValidation(jwtConfirmationAccountTokenDto);
+
+        if (!tokenValidation.IsSuccess)
+        {
+            return Result<string>.Failure(tokenValidation.Error!);
+        }
+
+        var userIdAndEmail = _tokenManager.GetJwtConfirmationAccountTokenClaims(tokenValidation.Value!);
+
+        var isNowConfirmedUser = await _userRepository.ChangeConfirmedAccountColumnToTrue(userIdAndEmail.Id);
+        
+        if (isNowConfirmedUser) return Result<string>.Success(String.Empty);
+        
+        throw new Exception("An error occured while trying to confirm the user.");
+        
+    }
+    
+    
 }

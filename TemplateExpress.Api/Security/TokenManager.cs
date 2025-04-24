@@ -16,9 +16,9 @@ public class TokenManager : ITokenManager
 {
     
     private readonly JwtConfirmationOptions _jwtConfirmationOptions;
-    public TokenManager(IOptions<JwtConfirmationOptions> jwtOptions)
+    public TokenManager(IOptions<JwtConfirmationOptions> jwtConfirmationOptions)
     {
-        _jwtConfirmationOptions = jwtOptions.Value;
+        _jwtConfirmationOptions = jwtConfirmationOptions.Value;
     }
     public string GenerateEmailConfirmationToken(UserIdAndEmailDto userIdAndEmailDto)
     {
@@ -72,8 +72,9 @@ public class TokenManager : ITokenManager
             IssuerSigningKey = key,
             ValidateIssuerSigningKey = true,
             ValidateLifetime = true,
+            ValidateAudience = false,
+            ValidateIssuer = false,
             // ValidIssuer = "http://localhost:",
-            // ValidateIssuer = true,
             ClockSkew = TimeSpan.Zero
         };
         
@@ -81,10 +82,11 @@ public class TokenManager : ITokenManager
 
         if (!tokenValidation.IsValid)
         {
+            // TODO: Add an logger here
             List<IErrorMessage> errorMessages = [new ErrorMessage("You do not have authorization for continue.", "Confirm your credentials.")];
             return Result<TokenValidationResult>.Failure(new Error((byte)ErrorCodes.InvalidJwtToken, (byte)ErrorTypes.Unauthorized, errorMessages));
         }
-        
+
         return Result<TokenValidationResult>.Success(tokenValidation);
     }
     
@@ -97,7 +99,7 @@ public class TokenManager : ITokenManager
         if (identity == null || !identity.Claims.Any())
             throw new SecurityTokenException("Missing token claims.");
 
-        var idStr = identity.FindFirst("userId")?.Value;
+        var idStr = identity.FindFirst(ClaimTypes.Name)?.Value;
         var email = identity.FindFirst(ClaimTypes.Email)?.Value;
 
         if (!long.TryParse(idStr, out var id))

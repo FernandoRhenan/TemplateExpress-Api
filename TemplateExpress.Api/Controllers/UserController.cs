@@ -25,18 +25,31 @@ public class UserController : ControllerBase
     public async Task<IActionResult> PostUser([FromBody] CreateUserDto createUserDto)
     {
    
-        var response = await _userService.CreateUserAsync(createUserDto);
+        var response = await _userService.CreateUserAndTokenAsync(createUserDto);
 
-        if (response.IsSuccess)
-        {
+        if (response.IsSuccess) 
             return Ok(response.Value);
-        }
-        if (response.Error?.Code == (byte)ErrorCodes.EmailAlreadyExists)
-        {
+        
+        if (response.Error?.Code == (byte)ErrorCodes.EmailAlreadyExists) 
             return Conflict(response.Error);    
-        }
         
         return BadRequest(response.Error);
         
+    } 
+    
+    [HttpPatch("email-confirmation/{token}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<Error>(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> PatchConfirmAccount(string token)
+    {
+
+        var response = await _userService.ConfirmAccountAsync(new JwtConfirmationAccountTokenDto(token));
+        
+        if(response.IsSuccess)
+            return NoContent();
+        
+        return Unauthorized(response.Error);
+
+
     }
 }

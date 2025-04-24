@@ -21,4 +21,13 @@ public class UserRepository : RepositoryBase, IUserRepository
         return thereIsAnEmail;
     }
 
+    public async Task<bool> ChangeConfirmedAccountColumnToTrue(long id, bool save = true)
+    {
+        var user = await Context.Users.FindAsync(id);
+        if (user == null) return false;
+        user.ConfirmedAccount = true;
+        if (save) await SaveChangesAsync();
+        return true;
+    }
+    
 }
