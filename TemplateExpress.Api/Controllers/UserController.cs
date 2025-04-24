@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using TemplateExpress.Api.Dto.UserDto;
 using TemplateExpress.Api.Interfaces.Services;
@@ -22,10 +23,10 @@ public class UserController : ControllerBase
     [ProducesResponseType<UserEmailDto>(StatusCodes.Status200OK)]
     [ProducesResponseType<Error>(StatusCodes.Status409Conflict)]
     [ProducesResponseType<Error>(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> PostUser([FromBody] CreateUserDto createUserDto)
+    public async Task<IActionResult> PostUser([FromBody] CreateUserDto createUserDto, [FromServices] IValidator<CreateUserDto> validator)
     {
    
-        var response = await _userService.CreateUserAndTokenAsync(createUserDto);
+        var response = await _userService.CreateUserAndTokenAsync(createUserDto, validator);
 
         if (response.IsSuccess) 
             return Ok(response.Value);
@@ -52,4 +53,13 @@ public class UserController : ControllerBase
 
 
     }
+
+    [HttpPost("generate-confirmation-account-token")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType<Error>(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> PostGenerateConfirmationAccountToken([FromBody] EmailAndPasswordDto emailAndPasswordDto, [FromServices] IValidator<EmailAndPasswordDto> validator)
+    {
+        return Ok();
+    }
+    
 }

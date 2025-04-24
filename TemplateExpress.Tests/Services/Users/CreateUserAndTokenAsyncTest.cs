@@ -10,11 +10,11 @@ using TemplateExpress.Api.Interfaces.Utils;
 using TemplateExpress.Api.Results;
 using TemplateExpress.Api.Results.EnumResponseTypes;
 using TemplateExpress.Api.Services;
-using TemplateExpress.Api.Validations;
+using TemplateExpress.Api.Validations.Users;
 
 namespace TemplateExpress.Tests.Services.Users;
 
-public class CreateUserAsyncTest
+public class CreateUserAndTokenAsyncTest
 {
 
     private static readonly DateTime Now = DateTime.Now;
@@ -68,7 +68,7 @@ public class CreateUserAsyncTest
         
         var expectedResult = Result<JwtConfirmationAccountTokenDto>.Success(jwtConfirmationAccountToken);
         
-        var validator = new UserValidator();
+        var validator = new CreateUserValidator();
 
         mocks.transactionMock.Setup(t => t.CommitAsync(It.IsAny<CancellationToken>()))
                        .Returns(Task.CompletedTask);
@@ -76,7 +76,7 @@ public class CreateUserAsyncTest
         mocks.transactionMock.Setup(t => t.RollbackAsync(It.IsAny<CancellationToken>()))
                        .Returns(Task.CompletedTask);
 
-        mocks.userRepositoryMock.Setup(u => u.FindAnEmailAsync(It.IsAny<string>()))
+        mocks.userRepositoryMock.Setup(u => u.FindAnEmailAsync(It.IsAny<UserEmailDto>()))
                           .ReturnsAsync(false);
 
         mocks.bcryptUtilMock.Setup(b => b.HashPassword(defaultObjects.createUserDto.Password, 12))
@@ -94,10 +94,10 @@ public class CreateUserAsyncTest
         mocks.tokenManagerMock.Setup(t => t.GenerateEmailConfirmationToken(defaultObjects.userIdAndEmailDto))
             .Returns("token");
         
-        var userService = new UserService(mocks.userRepositoryMock.Object, validator, mocks.bcryptUtilMock.Object, mocks.tokenManagerMock.Object);
+        var userService = new UserService(mocks.userRepositoryMock.Object, mocks.bcryptUtilMock.Object, mocks.tokenManagerMock.Object);
 
         // Act
-        var result = await userService.CreateUserAndTokenAsync(defaultObjects.createUserDto);
+        var result = await userService.CreateUserAndTokenAsync(defaultObjects.createUserDto, validator);
 
         // Assert
         result.Should().BeOfType<Result<JwtConfirmationAccountTokenDto>>();
@@ -108,7 +108,7 @@ public class CreateUserAsyncTest
         // Verify interactions
         mocks.transactionMock.Verify(t => t.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
         mocks.transactionMock.Verify(t => t.RollbackAsync(It.IsAny<CancellationToken>()), Times.Never);
-        mocks.userRepositoryMock.Verify(u => u.FindAnEmailAsync(It.IsAny<string>()), Times.Once);
+        mocks.userRepositoryMock.Verify(u => u.FindAnEmailAsync(It.IsAny<UserEmailDto>()), Times.Once);
         mocks.bcryptUtilMock.Verify(b => b.HashPassword(It.IsAny<string>(), 12), Times.Once);
         mocks.userRepositoryMock.Verify(u => u.BeginTransactionAsync(), Times.Once);
         mocks.userRepositoryMock.Verify(u => u.InsertUser(It.IsAny<UserEntity>()), Times.Once);
@@ -124,14 +124,14 @@ public class CreateUserAsyncTest
         // Arrange
         var mocks = GetAllMocks();
 
-        var validator = new UserValidator();
+        var validator = new CreateUserValidator();
 
-        var userService = new UserService(mocks.userRepositoryMock.Object, validator, mocks.bcryptUtilMock.Object, mocks.tokenManagerMock.Object);
+        var userService = new UserService(mocks.userRepositoryMock.Object, mocks.bcryptUtilMock.Object, mocks.tokenManagerMock.Object);
 
         var invalidCreateUserDto = new CreateUserDto("", "test1", "123123");
         
         // Act
-        var result = await userService.CreateUserAndTokenAsync(invalidCreateUserDto);
+        var result = await userService.CreateUserAndTokenAsync(invalidCreateUserDto, validator);
 
         // Assert
         result.Should().BeOfType<Result<JwtConfirmationAccountTokenDto>>();
@@ -141,7 +141,7 @@ public class CreateUserAsyncTest
         result.Error?.Messages.Should().BeOfType<List<IErrorMessage>>();
         
         mocks.userRepositoryMock.Verify(u => u.InsertUser(It.IsAny<UserEntity>()), Times.Never());
-        mocks.userRepositoryMock.Verify(u => u.FindAnEmailAsync(It.IsAny<string>()), Times.Never());
+        mocks.userRepositoryMock.Verify(u => u.FindAnEmailAsync(It.IsAny<UserEmailDto>()), Times.Never());
         mocks.userRepositoryMock.Verify(u => u.BeginTransactionAsync(), Times.Never);
 
     }
@@ -155,16 +155,16 @@ public class CreateUserAsyncTest
         var mocks = GetAllMocks();
         var defaultObjects = GenerateDefaultObjects();
 
-        var validator = new UserValidator();
-        var userService = new UserService(mocks.userRepositoryMock.Object, validator, mocks.bcryptUtilMock.Object, mocks.tokenManagerMock.Object);
+        var validator = new CreateUserValidator();
+        var userService = new UserService(mocks.userRepositoryMock.Object, mocks.bcryptUtilMock.Object, mocks.tokenManagerMock.Object);
         
         List<IErrorMessage> errorMessages = [new ErrorMessage("This email is already in use.", "Try another email.")];
 
-        mocks.userRepositoryMock.Setup(u => u.FindAnEmailAsync(It.IsAny<string>()))
+        mocks.userRepositoryMock.Setup(u => u.FindAnEmailAsync(It.IsAny<UserEmailDto>()))
             .ReturnsAsync(true);
         
         // Act
-        var result = await userService.CreateUserAndTokenAsync(defaultObjects.createUserDto);
+        var result = await userService.CreateUserAndTokenAsync(defaultObjects.createUserDto, validator);
 
         // Assert
         result.Should().BeOfType<Result<JwtConfirmationAccountTokenDto>>();
@@ -174,7 +174,7 @@ public class CreateUserAsyncTest
         result.Error?.Messages.Should().BeOfType<List<IErrorMessage>>();
         result.Error?.Messages.Should().BeEquivalentTo(errorMessages);
         
-        mocks.userRepositoryMock.Verify(u => u.FindAnEmailAsync(It.IsAny<string>()), Times.Once);
+        mocks.userRepositoryMock.Verify(u => u.FindAnEmailAsync(It.IsAny<UserEmailDto>()), Times.Once);
         mocks.userRepositoryMock.Verify(u => u.BeginTransactionAsync(), Times.Never);
         mocks.userRepositoryMock.Verify(u => u.InsertUser(It.IsAny<UserEntity>()), Times.Never);
         mocks.tokenManagerMock.Verify(t => t.GenerateEmailConfirmationToken(It.IsAny<UserIdAndEmailDto>()), Times.Never);
@@ -189,11 +189,11 @@ public class CreateUserAsyncTest
         var mocks = GetAllMocks();
         var defaultObjects = GenerateDefaultObjects();
 
-        var validator = new UserValidator();
-        var userService = new UserService(mocks.userRepositoryMock.Object, validator, mocks.bcryptUtilMock.Object,
+        var validator = new CreateUserValidator();
+        var userService = new UserService(mocks.userRepositoryMock.Object, mocks.bcryptUtilMock.Object,
             mocks.tokenManagerMock.Object);
 
-        mocks.userRepositoryMock.Setup(u => u.FindAnEmailAsync(It.IsAny<string>()))
+        mocks.userRepositoryMock.Setup(u => u.FindAnEmailAsync(It.IsAny<UserEmailDto>()))
             .ReturnsAsync(false);
 
         mocks.bcryptUtilMock.Setup(b => b.HashPassword(defaultObjects.createUserDto.Password, 12))
@@ -210,11 +210,11 @@ public class CreateUserAsyncTest
 
 
         // Act
-        Func<Task> act = async () => await userService.CreateUserAndTokenAsync(defaultObjects.createUserDto);
+        Func<Task> act = async () => await userService.CreateUserAndTokenAsync(defaultObjects.createUserDto, validator);
 
         // Assert
         await act.Should().ThrowAsync<TransactionException>().WithMessage("An error occured while trying to create the user.");
-        mocks.userRepositoryMock.Verify(u => u.FindAnEmailAsync(It.IsAny<string>()), Times.Once);
+        mocks.userRepositoryMock.Verify(u => u.FindAnEmailAsync(It.IsAny<UserEmailDto>()), Times.Once);
         mocks.userRepositoryMock.Verify(u => u.BeginTransactionAsync(), Times.Once);
         mocks.userRepositoryMock.Verify(u => u.InsertUser(It.IsAny<UserEntity>()), Times.Once);
         mocks.transactionMock.Verify(t => t.CommitAsync(It.IsAny<CancellationToken>()), Times.Never);

@@ -5,5 +5,5 @@ public enum ErrorCodes : byte
 {
     InvalidInput,
     EmailAlreadyExists,
-    InvalidJwtToken
+    InvalidJwtToken,
 }

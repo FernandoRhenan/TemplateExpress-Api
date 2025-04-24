@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TemplateExpress.Api.Data;
+using TemplateExpress.Api.Dto.UserDto;
 using TemplateExpress.Api.Entities;
 using TemplateExpress.Api.Interfaces.Repositories;
 
@@ -15,9 +16,9 @@ public class UserRepository : RepositoryBase, IUserRepository
         return user;
     }
 
-    public async Task<bool> FindAnEmailAsync(string email)
+    public async Task<bool> FindAnEmailAsync(UserEmailDto userEmailDto)
     {
-        var thereIsAnEmail = await Context.Users.AnyAsync(u => u.Email == email);
+        var thereIsAnEmail = await Context.Users.AnyAsync(u => u.Email == userEmailDto.Email);
         return thereIsAnEmail;
     }
 
@@ -28,6 +29,13 @@ public class UserRepository : RepositoryBase, IUserRepository
         user.ConfirmedAccount = true;
         if (save) await SaveChangesAsync();
         return true;
+    }
+
+    public async Task<UserEntity?> FindEmailAsync(UserEmailDto userEmailDto)
+    {   
+        var email = await Context.Users.FirstOrDefaultAsync(u => u.Email == userEmailDto.Email);
+        if (email == null) return null;
+        return email;
     }
     
 }
