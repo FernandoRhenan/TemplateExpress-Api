@@ -25,7 +25,7 @@ public class UserController : ControllerBase
     [ProducesResponseType<Error>(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> PostUser([FromBody] CreateUserDto createUserDto, [FromServices] IValidator<CreateUserDto> validator)
     {
-   
+
         var response = await _userService.CreateUserAndTokenAsync(createUserDto, validator);
 
         if (response.IsSuccess) 
@@ -50,16 +50,21 @@ public class UserController : ControllerBase
             return NoContent();
         
         return Unauthorized(response.Error);
-
-
+        
     }
-
+    
     [HttpPost("generate-confirmation-account-token")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType<JwtConfirmationAccountTokenDto>(StatusCodes.Status200OK)]
     [ProducesResponseType<Error>(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> PostGenerateConfirmationAccountToken([FromBody] EmailAndPasswordDto emailAndPasswordDto, [FromServices] IValidator<EmailAndPasswordDto> validator)
     {
-        return Ok();
-    }
-    
+
+        var response = await _userService.GenerateConfirmationAccountTokenAsync(emailAndPasswordDto, validator);
+        
+        if(response.IsSuccess)
+            return Ok(response.Value);
+        
+        return BadRequest(response.Error);
+            
+        }
 }

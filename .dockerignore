@@ -1,0 +1,16 @@
+**/bin/
+**/obj/
+postgres_data/
+.vscode/
+.idea/
+*.user
+*.suo
+*.db
+*.log
+*.TestResults/
+*.DS_Store
+docker-compose.override.yml
+.env
+.git
+.gitignore
+*.md

@@ -110,7 +110,6 @@ public class UserService : IUserService
     }
 
     // TODO: It wasn't unit tested.
-    // TODO: It wasn't test with postman
     public async Task<Result<JwtConfirmationAccountTokenDto>> GenerateConfirmationAccountTokenAsync(EmailAndPasswordDto emailAndPasswordDto, IValidator<EmailAndPasswordDto> validator)
     {
         var validationResult = await validator.ValidateAsync(emailAndPasswordDto);
