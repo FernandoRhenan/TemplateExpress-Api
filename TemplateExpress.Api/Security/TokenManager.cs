@@ -6,16 +6,18 @@ using Microsoft.IdentityModel.Tokens;
 using TemplateExpress.Api.Dto.UserDto;
 using TemplateExpress.Api.Interfaces.Security;
 using TemplateExpress.Api.Options;
+using TemplateExpress.Api.Results;
+using TemplateExpress.Api.Results.EnumResponseTypes;
 
 namespace TemplateExpress.Api.Security;
 
 public class TokenManager : ITokenManager
 {
     
-    private readonly JwtOptions _jwtOptions;
-    public TokenManager(IOptions<JwtOptions> jwtOptions)
+    private readonly JwtConfirmationOptions _jwtConfirmationOptions;
+    public TokenManager(IOptions<JwtConfirmationOptions> jwtConfirmationOptions)
     {
-        _jwtOptions = jwtOptions.Value;
+        _jwtConfirmationOptions = jwtConfirmationOptions.Value;
     }
     public string GenerateEmailConfirmationToken(UserIdAndEmailDto userIdAndEmailDto)
     {
@@ -23,7 +25,7 @@ public class TokenManager : ITokenManager
         var handler = new JwtSecurityTokenHandler();
 
         // Get JwtSecret
-        var jwtSecret = _jwtOptions.Secret;
+        var jwtSecret = _jwtConfirmationOptions.Secret;
         if (string.IsNullOrWhiteSpace(jwtSecret)) throw new InvalidOperationException("Missing JWT Secret.");
 
         var key = Encoding.UTF8.GetBytes(jwtSecret);
@@ -54,5 +56,61 @@ public class TokenManager : ITokenManager
         ci.AddClaim(new Claim(ClaimTypes.Name, userIdAndEmailDto.Id.ToString()));
         return ci;
     }
+
+    // TODO: It wasn't unit tested.
+    public async Task<Result<TokenValidationResult>> TokenValidation(JwtConfirmationAccountTokenDto jwtConfirmationAccountTokenDto)
+    {
+        var jwtSecret = _jwtConfirmationOptions.Secret;
+        if (string.IsNullOrWhiteSpace(jwtSecret)) throw new InvalidOperationException("Missing JWT Secret.");
+        
+        var handler = new JwtSecurityTokenHandler();
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
+
+        var validationParameters = new TokenValidationParameters
+        {
+            IssuerSigningKey = key,
+            ValidateIssuerSigningKey = true,
+            ValidateLifetime = true,
+            ValidateAudience = false,
+            ValidateIssuer = false,
+            // ValidIssuer = "http://localhost:",
+            ClockSkew = TimeSpan.Zero
+        };
+        
+        var tokenValidation = await handler.ValidateTokenAsync(jwtConfirmationAccountTokenDto.Token, validationParameters);
+
+        if (!tokenValidation.IsValid)
+        {
+            // TODO: Add an logger here
+            List<IErrorMessage> errorMessages = [new ErrorMessage("You do not have authorization for continue.", "Confirm your credentials.")];
+            return Result<TokenValidationResult>.Failure(new Error((byte)ErrorCodes.InvalidJwtToken, (byte)ErrorTypes.Unauthorized, errorMessages));
+        }
+
+        return Result<TokenValidationResult>.Success(tokenValidation);
+    }
     
+    // TODO: It wasn't unit tested.
+    public UserIdAndEmailDto GetJwtConfirmationAccountTokenClaims(TokenValidationResult tokenValidationResult)
+    {
+        
+        var identity = tokenValidationResult.ClaimsIdentity;
+
+        if (identity == null || !identity.Claims.Any())
+            throw new SecurityTokenException("Missing token claims.");
+
+        var idStr = identity.FindFirst(ClaimTypes.Name)?.Value;
+        var email = identity.FindFirst(ClaimTypes.Email)?.Value;
+
+        if (!long.TryParse(idStr, out var id))
+            throw new SecurityTokenException("Missing userId claim.");
+        
+        if(email == null)
+            throw new SecurityTokenException("Missing email claim.");
+
+        return new UserIdAndEmailDto(id, email);
+    }
+
+    
+    // TODO: It wasn't unit tested.
+
 }

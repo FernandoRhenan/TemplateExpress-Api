@@ -2,23 +2,37 @@ using System.Net;
 using System.Net.Mail;
 using Microsoft.Extensions.Options;
 using TemplateExpress.Api.Dto.UserDto;
+using TemplateExpress.Api.Interfaces.Security;
 using TemplateExpress.Api.Interfaces.Services;
 using TemplateExpress.Api.Options;
+using TemplateExpress.Api.Results;
 
 namespace TemplateExpress.Api.Services;
 
 public class EmailService : IEmailService
 {
 
-    private EmailConfiguration _emailOptions;
+    private readonly EmailConfiguration _emailOptions;
+    private readonly ITokenManager _tokenManager;
     
-    public EmailService(IOptions<EmailConfiguration> emailOptions)
+    public EmailService(IOptions<EmailConfiguration> emailOptions, ITokenManager tokenManager)
     {
         _emailOptions = emailOptions.Value;
+        _tokenManager = tokenManager;
     }
     
-    public Task SendEmailAsync(UserEmailDto userEmailDto, string subject, string message)
+    // TODO: It wasn't unit tested.
+    public async Task<Result<string>> SendEmailConfirmationTokenAsync(JwtConfirmationAccountTokenDto jwtConfirmationAccountTokenDto)
     {
+        var tokenValidation = await _tokenManager.TokenValidation(jwtConfirmationAccountTokenDto);
+        
+        if (!tokenValidation.IsSuccess)
+        {
+            return Result<string>.Failure(tokenValidation.Error!);
+        }
+       
+        var userIdAndEmail = _tokenManager.GetJwtConfirmationAccountTokenClaims(tokenValidation.Value!);
+        
         var client = new SmtpClient(_emailOptions.Host, _emailOptions.Port)
         {
             EnableSsl = true,
@@ -26,13 +40,21 @@ public class EmailService : IEmailService
             Credentials = new NetworkCredential(_emailOptions.Username, _emailOptions.Password)
         };
 
-        return client.SendMailAsync(
-            new MailMessage(
-                _emailOptions.EmailSender ?? throw new NullReferenceException("Email sender missing."),
-                userEmailDto.Email,
-                subject,
-                message
-                )
-        );
+        var emailSender = _emailOptions.EmailSender ?? throw new NullReferenceException("Missing Email Sender.");
+        // TODO: Upgrade this HTML message
+        var htmlMessage = $"<a href='http://localhost:5290/email-confirmation/{jwtConfirmationAccountTokenDto.Token}'>Clique aqui para confirmar</a>";
+        var message = new MailMessage(
+            emailSender,
+            userIdAndEmail.Email,
+            "Email Confirmation",
+            htmlMessage
+            )
+        {
+            IsBodyHtml = true
+        };
+
+        await client.SendMailAsync(message);
+
+        return Result<string>.Success(String.Empty);
     }
 }

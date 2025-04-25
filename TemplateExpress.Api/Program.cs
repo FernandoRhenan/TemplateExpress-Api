@@ -12,7 +12,7 @@ using TemplateExpress.Api.Services;
 using TemplateExpress.Api.Repositories;
 using TemplateExpress.Api.Security;
 using TemplateExpress.Api.Utils;
-using TemplateExpress.Api.Validations;
+using TemplateExpress.Api.Validations.Users;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,10 +29,11 @@ builder.Services.AddScoped<IBCryptUtil, BCryptUtil>();
 builder.Services.AddTransient<GlobalExceptionHandlingMiddleware>();
 
 // TODO Add it in a extension method.
-builder.Services.AddScoped<IValidator<CreateUserDto>, UserValidator>();
+builder.Services.AddScoped<IValidator<CreateUserDto>, CreateUserValidator>();
+builder.Services.AddScoped<IValidator<EmailAndPasswordDto>, LoginUserValidator>();
 
-builder.Services.Configure<JwtOptions>(
-    builder.Configuration.GetSection(JwtOptions.Section));
+builder.Services.Configure<JwtConfirmationOptions>(
+    builder.Configuration.GetSection(JwtConfirmationOptions.Section));
 
 builder.Services.Configure<EmailConfiguration>(
     builder.Configuration.GetSection(EmailConfiguration.Section));

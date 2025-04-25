@@ -15,25 +15,22 @@ namespace TemplateExpress.Api.Services;
 public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
-    private readonly IValidator<CreateUserDto> _validator;
     private readonly IBCryptUtil _bCryptUtil;
     private readonly ITokenManager _tokenManager;
     public UserService(
         IUserRepository userRepository,
-        IValidator<CreateUserDto> validator,
         IBCryptUtil bCryptUtil,
         ITokenManager tokenManager
         )
     {
         _userRepository = userRepository;
-        _validator = validator;
         _bCryptUtil = bCryptUtil;
         _tokenManager = tokenManager;
     }   
 
-    public async Task<Result<JwtConfirmationAccountToken>> CreateUserAsync(CreateUserDto createUserDto)
+    public async Task<Result<JwtConfirmationAccountTokenDto>> CreateUserAndTokenAsync(CreateUserDto createUserDto, IValidator<CreateUserDto> validator)
     {
-        ValidationResult validationResult = await _validator.ValidateAsync(createUserDto);
+        var validationResult = await validator.ValidateAsync(createUserDto);
             
         if (!validationResult.IsValid)
         {
@@ -42,19 +39,21 @@ public class UserService : IUserService
                 .Select(failure => new ErrorMessage(failure.ErrorMessage, "Fix the " + failure.PropertyName.ToLower() + " field."))
                 .ToList<IErrorMessage>();
             
-            return Result<JwtConfirmationAccountToken>.Failure(
+            return Result<JwtConfirmationAccountTokenDto>.Failure(
                 new Error(
                     (byte)ErrorCodes.InvalidInput,
                     (byte)ErrorTypes.InputValidationError,
                     errors));
         }
 
-        var thereIsEmail = await _userRepository.FindAnEmailAsync(createUserDto.Email);
+        var email = new UserEmailDto(createUserDto.Email);
+        
+        var thereIsEmail = await _userRepository.FindAnEmailAsync(email);
         if (thereIsEmail)
         {
             List<IErrorMessage> errorMessages = [new ErrorMessage("This email is already in use.", "Try another email.")];
             Error error = new((byte)ErrorCodes.EmailAlreadyExists, (byte)ErrorTypes.BusinessLogicValidationError, errorMessages);
-            return Result<JwtConfirmationAccountToken>.Failure(error);
+            return Result<JwtConfirmationAccountTokenDto>.Failure(error);
         }
         
         var createTime = DateTime.Now;
@@ -80,7 +79,7 @@ public class UserService : IUserService
 
             await transaction.CommitAsync();
 
-            return Result<JwtConfirmationAccountToken>.Success(new JwtConfirmationAccountToken(token));
+            return Result<JwtConfirmationAccountTokenDto>.Success(new JwtConfirmationAccountTokenDto(token));
         }
         catch (Exception ex)
         {
@@ -89,4 +88,63 @@ public class UserService : IUserService
         }
 
     }
+
+    // TODO: It wasn't unit tested.
+    public async Task<Result<string>> ConfirmAccountAsync(JwtConfirmationAccountTokenDto jwtConfirmationAccountTokenDto)
+    {
+        var tokenValidation = await _tokenManager.TokenValidation(jwtConfirmationAccountTokenDto);
+
+        if (!tokenValidation.IsSuccess)
+        {
+            return Result<string>.Failure(tokenValidation.Error!);
+        }
+
+        var userIdAndEmail = _tokenManager.GetJwtConfirmationAccountTokenClaims(tokenValidation.Value!);
+
+        var isNowConfirmedUser = await _userRepository.ChangeConfirmedAccountColumnToTrue(userIdAndEmail.Id);
+        
+        if (isNowConfirmedUser) return Result<string>.Success(String.Empty);
+        
+        throw new Exception("An error occured while trying to confirm the user.");
+        
+    }
+
+    // TODO: It wasn't unit tested.
+    public async Task<Result<JwtConfirmationAccountTokenDto>> GenerateConfirmationAccountTokenAsync(EmailAndPasswordDto emailAndPasswordDto, IValidator<EmailAndPasswordDto> validator)
+    {
+        var validationResult = await validator.ValidateAsync(emailAndPasswordDto);
+        
+        if (!validationResult.IsValid)
+        {
+            // → Abstrair ↓
+            var errors = validationResult.Errors
+                .Select(failure => new ErrorMessage(failure.ErrorMessage, "Fix the " + failure.PropertyName.ToLower() + " field."))
+                .ToList<IErrorMessage>();
+            
+            return Result<JwtConfirmationAccountTokenDto>.Failure(
+                new Error(
+                    (byte)ErrorCodes.InvalidInput,
+                    (byte)ErrorTypes.InputValidationError,
+                    errors));
+        }
+        
+        var email = new UserEmailDto(emailAndPasswordDto.Email);
+        var user = await _userRepository.FindEmailAsync(email);
+
+        List<IErrorMessage> errorMessages = [new ErrorMessage("Invalid Email or Password.", "Post valid credentials.")];
+        Error error = new((byte)ErrorCodes.InvalidInput, (byte)ErrorTypes.BusinessLogicValidationError, errorMessages);
+        
+        if (user == null) return Result<JwtConfirmationAccountTokenDto>.Failure(error);
+
+        var comparedPassword = _bCryptUtil.ComparePassword(emailAndPasswordDto.Password, user.Password);
+
+        if (comparedPassword == false) return Result<JwtConfirmationAccountTokenDto>.Failure(error);
+        
+        var userIdAndEmailDto = new UserIdAndEmailDto(user.Id, user.Email);
+        var token = _tokenManager.GenerateEmailConfirmationToken(userIdAndEmailDto);
+        var jwtConfirmationAccountTokenDto = new JwtConfirmationAccountTokenDto(token);
+        return Result<JwtConfirmationAccountTokenDto>.Success(jwtConfirmationAccountTokenDto);
+
+    }
+    
 }

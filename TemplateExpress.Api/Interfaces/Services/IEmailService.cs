@@ -1,8 +1,9 @@
 using TemplateExpress.Api.Dto.UserDto;
+using TemplateExpress.Api.Results;
 
 namespace TemplateExpress.Api.Interfaces.Services;
 
 public interface IEmailService
 {
-    Task SendEmailAsync(UserEmailDto userEmailDto, string subject, string message);
+    Task<Result<string>> SendEmailConfirmationTokenAsync(JwtConfirmationAccountTokenDto jwtConfirmationAccountTokenDto);
 }

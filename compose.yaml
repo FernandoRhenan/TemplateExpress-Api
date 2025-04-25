@@ -1,14 +1,28 @@
 ﻿services:
-  templateexpress.db:
+  
+  templateexpress-app:
+    container_name: templateexpress-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/src
+    ports:
+      - "8080:8080"
+    depends_on:
+      - templateexpress-db
+  
+  templateexpress-db:
     container_name: "templateexpress-postgres"
     image: "postgres:latest"
     ports:
-      - 5432:5432
+      - "5432:5432"
     environment:
       - POSTGRES_USER=user123
       - POSTGRES_PASSWORD=pass123
       - POSTGRES_DB=db123
     volumes:
       - ./postgres_data:/var/lib/postgresql/data
+
 volumes:
   postgres_data:

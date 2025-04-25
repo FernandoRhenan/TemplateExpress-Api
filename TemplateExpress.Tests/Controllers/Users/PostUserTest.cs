@@ -1,4 +1,5 @@
 using FluentAssertions;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using TemplateExpress.Api.Controllers;
@@ -6,12 +7,13 @@ using TemplateExpress.Api.Dto.UserDto;
 using TemplateExpress.Api.Interfaces.Services;
 using TemplateExpress.Api.Results;
 using TemplateExpress.Api.Results.EnumResponseTypes;
+using TemplateExpress.Api.Validations.Users;
 
 namespace TemplateExpress.Tests.Controllers.Users;
 
 public class PostUserTest
 {
-
+    // TODO: Review this test and check de logic
     [Fact(DisplayName = "Given an User, when it is valid, then should return OK.")]
     public async Task ValidUser()
     {
@@ -19,27 +21,29 @@ public class PostUserTest
         // Arrange
         var userServiceMock = new Mock<IUserService>();
         var userController = new UserController(userServiceMock.Object);
-        var jwtConfirmationAccountToken = new JwtConfirmationAccountToken("token");
+        var jwtConfirmationAccountToken = new JwtConfirmationAccountTokenDto("token");
         
         var createUserDto = new CreateUserDto("test@test.com", "test_user", "12L0d1xP-!@dX");
-        var mockServiceResponse = Result<JwtConfirmationAccountToken>.Success(jwtConfirmationAccountToken);
+        var validator = new CreateUserValidator();
+        var mockServiceResponse = Result<JwtConfirmationAccountTokenDto>.Success(jwtConfirmationAccountToken);
         
         userServiceMock
-            .Setup(s => s.CreateUserAsync(createUserDto))
+            .Setup(s => s.CreateUserAndTokenAsync(createUserDto, validator))
             .ReturnsAsync(mockServiceResponse);
 
         // Act
-        var result = await userController.PostUser(createUserDto);
+        var result = await userController.PostUser(createUserDto, validator);
         
         // Assert
         var okObjectResult = result as OkObjectResult;
-        var resultValue = okObjectResult?.Value as JwtConfirmationAccountToken;
+        var resultValue = okObjectResult?.Value as JwtConfirmationAccountTokenDto;
 
         result.Should().BeOfType<OkObjectResult>();
         resultValue?.Token.Should().NotBeNull().And.Be(jwtConfirmationAccountToken.Token);
-        userServiceMock.Verify(s => s.CreateUserAsync(createUserDto), Times.Once());
+        userServiceMock.Verify(s => s.CreateUserAndTokenAsync(createUserDto, validator), Times.Once());
     }
 
+    // TODO: Review this test and check de logic
     [Fact(DisplayName = "Given an User, when it is invalid, then should return BadRequest.")]
     public async Task InvalidUser()
     {
@@ -53,15 +57,17 @@ public class PostUserTest
             new ErrorMessage("Invalid input", "Check the fields.") 
         };
         
-        var mockServiceResponse = Result<JwtConfirmationAccountToken>
+        var mockServiceResponse = Result<JwtConfirmationAccountTokenDto>
             .Failure(new Error((byte)ErrorCodes.InvalidInput, (byte)ErrorTypes.InputValidationError, errorMessages));
         
+        var validator = new CreateUserValidator();
+        
         userServiceMock
-            .Setup(s => s.CreateUserAsync(createUserDto))
+            .Setup(s => s.CreateUserAndTokenAsync(createUserDto, validator))
             .ReturnsAsync(mockServiceResponse);
     
         // Act
-        var result = await usersController.PostUser(createUserDto);
+        var result = await usersController.PostUser(createUserDto, validator);
         
         var badRequestObjectResult = result as BadRequestObjectResult;
         var resultValue = badRequestObjectResult?.Value as Error;
@@ -70,10 +76,11 @@ public class PostUserTest
         result.Should().BeOfType<BadRequestObjectResult>("the user wasn't created successfully.");
         resultValue?.Code.Should().Be((byte)ErrorCodes.InvalidInput);
         resultValue?.Type.Should().Be((byte)ErrorTypes.InputValidationError);
-        userServiceMock.Verify(s => s.CreateUserAsync(createUserDto), Times.Once());
+        userServiceMock.Verify(s => s.CreateUserAndTokenAsync(createUserDto, validator), Times.Once());
     
     }
     
+    // TODO: Review this test and check de logic
     [Fact(DisplayName = "Given an User, when it is conflicting, then should return Conflict.")]
     public async Task ConflictingUser()
     {
@@ -87,11 +94,14 @@ public class PostUserTest
             new ErrorMessage("Invalid input", "Check the fields.") 
         };
         
-        var mockServiceResponse = Result<JwtConfirmationAccountToken>.Failure(new Error((byte)ErrorCodes.EmailAlreadyExists, (byte)ErrorTypes.BusinessLogicValidationError, errorMessages));
-        userServiceMock.Setup(s => s.CreateUserAsync(createUserDto)).ReturnsAsync(mockServiceResponse);
+        var validator = new CreateUserValidator();
+
+        
+        var mockServiceResponse = Result<JwtConfirmationAccountTokenDto>.Failure(new Error((byte)ErrorCodes.EmailAlreadyExists, (byte)ErrorTypes.BusinessLogicValidationError, errorMessages));
+        userServiceMock.Setup(s => s.CreateUserAndTokenAsync(createUserDto, validator)).ReturnsAsync(mockServiceResponse);
     
         // Act
-        var result = await usersController.PostUser(createUserDto);
+        var result = await usersController.PostUser(createUserDto, validator);
     
         var conflictObjectResult = result as ConflictObjectResult;
         var resultValue = conflictObjectResult?.Value as Error;
@@ -100,7 +110,7 @@ public class PostUserTest
         result.Should().BeOfType<ConflictObjectResult>("the user username already exists.");
         resultValue?.Code.Should().Be((byte)ErrorCodes.EmailAlreadyExists);
         resultValue?.Type.Should().Be((byte)ErrorTypes.BusinessLogicValidationError);
-        userServiceMock.Verify(s => s.CreateUserAsync(createUserDto), Times.Once());
+        userServiceMock.Verify(s => s.CreateUserAndTokenAsync(createUserDto, validator), Times.Once());
     
     }
     
