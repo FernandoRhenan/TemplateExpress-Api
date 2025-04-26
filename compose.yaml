@@ -1,16 +1,16 @@
 ﻿services:
   
-  templateexpress-app:
-    container_name: templateexpress-app
-    build:
-      context: .
-      dockerfile: Dockerfile
-    volumes:
-      - .:/src
-    ports:
-      - "8080:8080"
-    depends_on:
-      - templateexpress-db
+#  templateexpress-app:
+#    container_name: templateexpress-app
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    volumes:
+#      - .:/src
+#    ports:
+#      - "8080:8080"
+#    depends_on:
+#      - templateexpress-db
   
   templateexpress-db:
     container_name: "templateexpress-postgres"

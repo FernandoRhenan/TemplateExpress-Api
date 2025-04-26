@@ -25,7 +25,6 @@ public class UserController : ControllerBase
     [ProducesResponseType<Error>(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> PostUser([FromBody] CreateUserDto createUserDto, [FromServices] IValidator<CreateUserDto> validator)
     {
-
         var response = await _userService.CreateUserAndTokenAsync(createUserDto, validator);
 
         if (response.IsSuccess) 
@@ -35,7 +34,6 @@ public class UserController : ControllerBase
             return Conflict(response.Error);    
         
         return BadRequest(response.Error);
-        
     } 
     
     [HttpPatch("email-confirmation/{token}")]

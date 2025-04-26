@@ -20,12 +20,11 @@ public class CreateUserAndTokenAsyncTest
     private static readonly DateTime Now = DateTime.Now;
     private static readonly Random Random = new();
     
-    // TODO: Review this method and check de logic
     private (UserEntity userEntity, CreateUserDto createUserDto, UserIdAndEmailDto userIdAndEmailDto, UserEmailDto userEmailDto) GenerateDefaultObjects()
     {
         var userId = Random.Next(1, 50_000);
 
-        var createUserDto = new CreateUserDto("test@test.com", "usertest1", "=d#OdcA)53?p7$$$Sv_0 ");
+        var createUserDto = new CreateUserDto("test@test.com", "comusertest1", "=d#OdcA)53?p7$$$Sv_0 ");
         var userIdAndEmailDto = new UserIdAndEmailDto(userId, createUserDto.Email);
 
         var userEmailDto = new UserEmailDto(createUserDto.Email);
@@ -43,7 +42,6 @@ public class CreateUserAndTokenAsyncTest
         return (userEntity, createUserDto, userIdAndEmailDto, userEmailDto);
     }
 
-    // TODO: Review this method and check de logic
     private (Mock<IUserRepository> userRepositoryMock, Mock<IBCryptUtil> bcryptUtilMock, Mock<ITokenManager>
         tokenManagerMock, Mock<IDbContextTransaction> transactionMock) GetAllMocks()
     {
@@ -53,9 +51,7 @@ public class CreateUserAndTokenAsyncTest
         var transactionMock = new Mock<IDbContextTransaction>();
         return (userRepositoryMock, bcryptUtilMock, tokenManagerMock, transactionMock);
     }
-    
-    
-    // TODO: Review this test and check de logic
+
     [Fact(DisplayName = "Given the user and token creation service, when the user data is valid, then return a successResponse.")]
     public async Task Success()
     {
@@ -92,7 +88,7 @@ public class CreateUserAndTokenAsyncTest
                           .ReturnsAsync(1);
         
         mocks.tokenManagerMock.Setup(t => t.GenerateEmailConfirmationToken(defaultObjects.userIdAndEmailDto))
-            .Returns("token");
+            .Returns(jwtConfirmationAccountToken.Token);
         
         var userService = new UserService(mocks.userRepositoryMock.Object, mocks.bcryptUtilMock.Object, mocks.tokenManagerMock.Object);
 
@@ -116,7 +112,6 @@ public class CreateUserAndTokenAsyncTest
         mocks.tokenManagerMock.Verify(t => t.GenerateEmailConfirmationToken(It.IsAny<UserIdAndEmailDto>()), Times.Once);
     }
 
-    // TODO: Review this test and check de logic
     [Fact(DisplayName = "Given the user and token creation service, when the user data is invalid, then return a validation error.")]
     public async Task InvalidUser()
     {
@@ -146,7 +141,6 @@ public class CreateUserAndTokenAsyncTest
 
     }
 
-    // TODO: Review this test and check de logic
     [Fact(DisplayName = "Given the user and token creation service, when the user already exists, then return a emailAlreadyExists error.")]
     public async Task EmailAlreadyExists()
     {
@@ -181,7 +175,6 @@ public class CreateUserAndTokenAsyncTest
 
     }
 
-    // TODO: Review this test and check de logic
     [Fact(DisplayName = "Given the user and token creation service, when occurs a error in transaction, then throw a TransactionException.")]
     public async Task TransactionException()
     {
@@ -217,8 +210,10 @@ public class CreateUserAndTokenAsyncTest
         mocks.userRepositoryMock.Verify(u => u.FindAnEmailAsync(It.IsAny<UserEmailDto>()), Times.Once);
         mocks.userRepositoryMock.Verify(u => u.BeginTransactionAsync(), Times.Once);
         mocks.userRepositoryMock.Verify(u => u.InsertUser(It.IsAny<UserEntity>()), Times.Once);
+        mocks.userRepositoryMock.Verify(u => u.SaveChangesAsync(), Times.Never);
         mocks.transactionMock.Verify(t => t.CommitAsync(It.IsAny<CancellationToken>()), Times.Never);
         mocks.transactionMock.Verify(t => t.RollbackAsync(It.IsAny<CancellationToken>()), Times.Once);
+        mocks.tokenManagerMock.Verify(t => t.GenerateEmailConfirmationToken(It.IsAny<UserIdAndEmailDto>()), Times.Never);
 
     }
 }
