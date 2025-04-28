@@ -75,7 +75,7 @@ public class UserService : IUserService
             await _userRepository.SaveChangesAsync();
 
             var userIdAndEmailDto = new UserIdAndEmailDto(createdUser.Id, createdUser.Email); 
-            var token = _tokenManager.GenerateEmailConfirmationToken(userIdAndEmailDto);
+            var token = _tokenManager.GenerateAccountConfirmationToken(userIdAndEmailDto);
 
             await transaction.CommitAsync();
 
@@ -92,7 +92,7 @@ public class UserService : IUserService
     // TODO: It wasn't unit tested.
     public async Task<Result<string>> ConfirmAccountAsync(JwtConfirmationAccountTokenDto jwtConfirmationAccountTokenDto)
     {
-        var tokenValidation = await _tokenManager.TokenValidation(jwtConfirmationAccountTokenDto);
+        var tokenValidation = await _tokenManager.ValidateAccountConfirmationToken(jwtConfirmationAccountTokenDto);
 
         if (!tokenValidation.IsSuccess)
         {
@@ -141,7 +141,7 @@ public class UserService : IUserService
         if (comparedPassword == false) return Result<JwtConfirmationAccountTokenDto>.Failure(error);
         
         var userIdAndEmailDto = new UserIdAndEmailDto(user.Id, user.Email);
-        var token = _tokenManager.GenerateEmailConfirmationToken(userIdAndEmailDto);
+        var token = _tokenManager.GenerateAccountConfirmationToken(userIdAndEmailDto);
         var jwtConfirmationAccountTokenDto = new JwtConfirmationAccountTokenDto(token);
         return Result<JwtConfirmationAccountTokenDto>.Success(jwtConfirmationAccountTokenDto);
 

@@ -14,18 +14,18 @@ namespace TemplateExpress.Api.Security;
 public class TokenManager : ITokenManager
 {
     
-    private readonly JwtConfirmationOptions _jwtConfirmationOptions;
-    public TokenManager(IOptions<JwtConfirmationOptions> jwtConfirmationOptions)
+    private readonly JwtAccountConfirmationOptions _jwtAccountConfirmationOptions;
+    public TokenManager(IOptions<JwtAccountConfirmationOptions> jwtAccountConfirmationOptions)
     {
-        _jwtConfirmationOptions = jwtConfirmationOptions.Value;
+        _jwtAccountConfirmationOptions = jwtAccountConfirmationOptions.Value;
     }
-    public string GenerateEmailConfirmationToken(UserIdAndEmailDto userIdAndEmailDto)
+    public string GenerateAccountConfirmationToken(UserIdAndEmailDto userIdAndEmailDto)
     {
         // Create a new instance of TokenHandler
         var handler = new JwtSecurityTokenHandler();
 
         // Get JwtSecret
-        var jwtSecret = _jwtConfirmationOptions.Secret;
+        var jwtSecret = _jwtAccountConfirmationOptions.Secret;
         if (string.IsNullOrWhiteSpace(jwtSecret)) throw new InvalidOperationException("Missing JWT Secret.");
 
         var key = Encoding.UTF8.GetBytes(jwtSecret);
@@ -38,7 +38,7 @@ public class TokenManager : ITokenManager
         {
             SigningCredentials = credentials,
             Expires = DateTime.UtcNow.AddHours(12),
-            Subject = GenerateEmailConfirmationTokenClaims(userIdAndEmailDto)
+            Subject = GenerateAccountConfirmationTokenClaims(userIdAndEmailDto)
         };
         
         // Generate a Token
@@ -49,7 +49,8 @@ public class TokenManager : ITokenManager
 
     }
 
-    private static ClaimsIdentity GenerateEmailConfirmationTokenClaims(UserIdAndEmailDto userIdAndEmailDto)
+    // TODO: It wasn't unit tested.
+    private static ClaimsIdentity GenerateAccountConfirmationTokenClaims(UserIdAndEmailDto userIdAndEmailDto)
     {
         var ci = new ClaimsIdentity();
         ci.AddClaim(new Claim(ClaimTypes.Email, userIdAndEmailDto.Email));
@@ -58,9 +59,9 @@ public class TokenManager : ITokenManager
     }
 
     // TODO: It wasn't unit tested.
-    public async Task<Result<TokenValidationResult>> TokenValidation(JwtConfirmationAccountTokenDto jwtConfirmationAccountTokenDto)
+    public async Task<Result<TokenValidationResult>> ValidateAccountConfirmationToken(JwtConfirmationAccountTokenDto jwtConfirmationAccountTokenDto)
     {
-        var jwtSecret = _jwtConfirmationOptions.Secret;
+        var jwtSecret = _jwtAccountConfirmationOptions.Secret;
         if (string.IsNullOrWhiteSpace(jwtSecret)) throw new InvalidOperationException("Missing JWT Secret.");
         
         var handler = new JwtSecurityTokenHandler();
@@ -111,6 +112,5 @@ public class TokenManager : ITokenManager
     }
 
     
-    // TODO: It wasn't unit tested.
 
 }

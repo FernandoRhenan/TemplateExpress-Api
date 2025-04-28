@@ -1,6 +1,6 @@
 namespace TemplateExpress.Api.Options;
 
-public class EmailConfiguration
+public class EmailConfigurationOptions
 {
     public const string Section = "EmailConfiguration";
     

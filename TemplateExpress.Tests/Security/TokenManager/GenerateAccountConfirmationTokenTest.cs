@@ -9,19 +9,19 @@ using Api.Options;
 using TemplateExpress.Api.Security;
 
 
-public class GenerateEmailConfirmationTokenTest
+public class GenerateAccountConfirmationTokenTest
 {
-    [Fact(DisplayName = "Given the Email Confirmation Token Generation, when JWT secret is provided, then returns the token successfully")]
+    [Fact(DisplayName = "Given the Account Confirmation Token Generation, when JWT secret is provided, then returns the token successfully")]
     public void ValidUserAndSecret()
     {
         // Arrange
-        IOptions<JwtConfirmationOptions> jwtOptions = Options.Create(new JwtConfirmationOptions());
+        IOptions<JwtAccountConfirmationOptions> jwtOptions = Options.Create(new JwtAccountConfirmationOptions());
         jwtOptions.Value.Secret = "testSecretKeyThatHaveMoreThan128Bits";
         var userIdAndEmailDto = new UserIdAndEmailDto(1, "test@test.com");
         var tokenManagerSecurity = new TokenManager(jwtOptions);
         
         // Act
-        var token = tokenManagerSecurity.GenerateEmailConfirmationToken(userIdAndEmailDto);
+        var token = tokenManagerSecurity.GenerateAccountConfirmationToken(userIdAndEmailDto);
         
         // Assert
         var handler = new JwtSecurityTokenHandler();
@@ -51,17 +51,17 @@ public class GenerateEmailConfirmationTokenTest
         difference.TotalMinutes.Should().Be(720); // 12H
     }
 
-    [Fact(DisplayName = "Given the Email Confirmation Token Generation, when JWT secret is not provided, then returns an exception.")]
+    [Fact(DisplayName = "Given the Account Confirmation Token Generation, when JWT secret is not provided, then returns an exception.")]
     public void ValidUserAndInvalidSecret()
     {
         // Arrange
-        IOptions<JwtConfirmationOptions> jwtOptions = Options.Create(new JwtConfirmationOptions());
+        IOptions<JwtAccountConfirmationOptions> jwtOptions = Options.Create(new JwtAccountConfirmationOptions());
         jwtOptions.Value.Secret = "";
         var userIdAndEmailDto = new UserIdAndEmailDto(1, "test@test.com");
         var tokenManagerSecurity = new TokenManager(jwtOptions);
         
         // Act
-        Action act = () => tokenManagerSecurity.GenerateEmailConfirmationToken(userIdAndEmailDto);
+        Action act = () => tokenManagerSecurity.GenerateAccountConfirmationToken(userIdAndEmailDto);
         
         // Assert
         act.Should().Throw<InvalidOperationException>()
