@@ -22,7 +22,7 @@ public class CreateUserAndTokenAsyncTest
     
     private (UserEntity userEntity, CreateUserDto createUserDto, UserIdAndEmailDto userIdAndEmailDto, UserEmailDto userEmailDto) GenerateDefaultObjects()
     {
-        var userId = Random.Next(1, 50_000);
+        var userId = (long)Random.Next(1, 50_000);
 
         var createUserDto = new CreateUserDto("test@test.com", "comusertest1", "=d#OdcA)53?p7$$$Sv_0 ");
         var userIdAndEmailDto = new UserIdAndEmailDto(userId, createUserDto.Email);
@@ -42,8 +42,7 @@ public class CreateUserAndTokenAsyncTest
         return (userEntity, createUserDto, userIdAndEmailDto, userEmailDto);
     }
 
-    private (Mock<IUserRepository> userRepositoryMock, Mock<IBCryptUtil> bcryptUtilMock, Mock<ITokenManager>
-        tokenManagerMock, Mock<IDbContextTransaction> transactionMock) GetAllMocks()
+    private (Mock<IUserRepository> userRepositoryMock, Mock<IBCryptUtil> bcryptUtilMock, Mock<ITokenManager> tokenManagerMock, Mock<IDbContextTransaction> transactionMock) GetAllMocks()
     {
         var userRepositoryMock = new Mock<IUserRepository>();
         var bcryptUtilMock = new Mock<IBCryptUtil>();
@@ -52,12 +51,11 @@ public class CreateUserAndTokenAsyncTest
         return (userRepositoryMock, bcryptUtilMock, tokenManagerMock, transactionMock);
     }
 
-    [Fact(DisplayName = "Given the user and token creation service, when the user data is valid, then return a successResponse.")]
+    [Fact(DisplayName = "Given the user and token creation service, when the user data is valid, then return a success response with the confirmation account token.")]
     public async Task Success()
     {
         // Arrange
         var defaultObjects = GenerateDefaultObjects();
-        
         var mocks = GetAllMocks();
         
         var jwtConfirmationAccountToken = new JwtConfirmationAccountTokenDto("token");
@@ -207,6 +205,8 @@ public class CreateUserAndTokenAsyncTest
 
         // Assert
         await act.Should().ThrowAsync<TransactionException>().WithMessage("An error occured while trying to create the user.");
+        
+        //Verify interactions
         mocks.userRepositoryMock.Verify(u => u.FindAnEmailAsync(It.IsAny<UserEmailDto>()), Times.Once);
         mocks.userRepositoryMock.Verify(u => u.BeginTransactionAsync(), Times.Once);
         mocks.userRepositoryMock.Verify(u => u.InsertUser(It.IsAny<UserEntity>()), Times.Once);

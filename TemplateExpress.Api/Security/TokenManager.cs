@@ -82,7 +82,6 @@ public class TokenManager : ITokenManager
 
         if (!tokenValidation.IsValid)
         {
-            // TODO: Add an logger here
             List<IErrorMessage> errorMessages = [new ErrorMessage("You do not have authorization for continue.", "Confirm your credentials.")];
             return Result<TokenValidationResult>.Failure(new Error((byte)ErrorCodes.InvalidJwtToken, (byte)ErrorTypes.Unauthorized, errorMessages));
         }

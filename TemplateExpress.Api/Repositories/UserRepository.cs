@@ -34,8 +34,7 @@ public class UserRepository : RepositoryBase, IUserRepository
     public async Task<UserEntity?> FindEmailAsync(UserEmailDto userEmailDto)
     {   
         var email = await Context.Users.FirstOrDefaultAsync(u => u.Email == userEmailDto.Email);
-        if (email == null) return null;
-        return email;
+        return email ?? null;
     }
     
 }

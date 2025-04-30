@@ -89,7 +89,6 @@ public class UserService : IUserService
 
     }
 
-    // TODO: It wasn't unit tested.
     public async Task<Result<string>> ConfirmAccountAsync(JwtConfirmationAccountTokenDto jwtConfirmationAccountTokenDto)
     {
         var tokenValidation = await _tokenManager.ValidateAccountConfirmationToken(jwtConfirmationAccountTokenDto);
