@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Mail;
+using Microsoft.Extensions.Options;
 using TemplateExpress.Api.Options;
 using TemplateExpress.Api.Interfaces.Utils;
 
@@ -9,9 +10,9 @@ public class SmtpEmailSender : IEmailSender
 {
     private readonly EmailConfigurationOptions _emailOptions;
 
-    public SmtpEmailSender(EmailConfigurationOptions emailOptions)
+    public SmtpEmailSender(IOptions<EmailConfigurationOptions> options)
     {
-        _emailOptions = emailOptions;
+        _emailOptions = options.Value;
     }
 
     public async Task SendEmailAsync(string to, string subject, string htmlMessage)

@@ -17,7 +17,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddInputValidators(this IServiceCollection services)
     {
         services.AddScoped<IValidator<CreateUserDto>, CreateUserValidator>();
-        services.AddScoped<IValidator<EmailAndPasswordDto>, LoginUserValidator>();
+        services.AddTransient<IValidator<EmailAndPasswordDto>, LoginUserValidator>();
         
         return services;
     }
@@ -25,7 +25,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddApiServices(this IServiceCollection services)
     {
         services.AddScoped<IUserService, UserService>();
-        services.AddTransient<IEmailService, EmailService>();
+        services.AddScoped<IEmailService, EmailService>();
         
         return services;
     }
