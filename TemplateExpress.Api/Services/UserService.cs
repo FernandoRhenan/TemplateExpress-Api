@@ -91,7 +91,7 @@ public class UserService : IUserService
 
     public async Task<Result<string>> ConfirmAccountAsync(JwtConfirmationAccountTokenDto jwtConfirmationAccountTokenDto)
     {
-        var tokenValidation = await _tokenManager.ValidateAccountConfirmationToken(jwtConfirmationAccountTokenDto);
+        var tokenValidation = await _tokenManager.ValidateAccountConfirmationTokenAsync(jwtConfirmationAccountTokenDto);
 
         if (!tokenValidation.IsSuccess)
         {
@@ -108,7 +108,6 @@ public class UserService : IUserService
         
     }
 
-    // TODO: It wasn't unit tested.
     public async Task<Result<JwtConfirmationAccountTokenDto>> GenerateConfirmationAccountTokenAsync(EmailAndPasswordDto emailAndPasswordDto, IValidator<EmailAndPasswordDto> validator)
     {
         var validationResult = await validator.ValidateAsync(emailAndPasswordDto);

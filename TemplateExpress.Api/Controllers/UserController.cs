@@ -41,14 +41,12 @@ public class UserController : ControllerBase
     [ProducesResponseType<Error>(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> PatchConfirmAccount(string token)
     {
-
         var response = await _userService.ConfirmAccountAsync(new JwtConfirmationAccountTokenDto(token));
         
         if(response.IsSuccess)
             return NoContent();
         
         return Unauthorized(response.Error);
-        
     }
     
     [HttpPost("generate-confirmation-account-token")]
@@ -64,5 +62,5 @@ public class UserController : ControllerBase
         
         return BadRequest(response.Error);
             
-        }
+    }
 }

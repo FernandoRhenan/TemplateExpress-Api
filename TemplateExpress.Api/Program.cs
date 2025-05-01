@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using TemplateExpress.Api.Data;
 using TemplateExpress.Api.Extension;
 using TemplateExpress.Api.Middlewares;
+using TemplateExpress.Api.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 

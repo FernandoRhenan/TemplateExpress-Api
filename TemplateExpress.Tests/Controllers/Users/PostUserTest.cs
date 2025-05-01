@@ -24,7 +24,7 @@ public class PostUserTest
         };
         
         return (createUserDto, errorMessages);
-        }
+    }
     
     
     [Fact(DisplayName = "Given a PostUser request, when it is all right, then return a success response.")]

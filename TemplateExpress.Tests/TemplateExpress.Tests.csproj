@@ -28,8 +28,4 @@
       <ProjectReference Include="..\TemplateExpress.Api\TemplateExpress.Api.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Controllers\Emails\" />
-    </ItemGroup>
-
 </Project>

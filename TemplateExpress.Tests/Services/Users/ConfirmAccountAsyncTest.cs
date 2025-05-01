@@ -45,7 +45,7 @@ public class ConfirmAccountAsyncTest
 
     var expectedResult = Result<string>.Success(String.Empty);
     
-    mocks.tokenManagerMock.Setup(t => t.ValidateAccountConfirmationToken(It.IsAny<JwtConfirmationAccountTokenDto>()))
+    mocks.tokenManagerMock.Setup(t => t.ValidateAccountConfirmationTokenAsync(It.IsAny<JwtConfirmationAccountTokenDto>()))
         .ReturnsAsync(Result<TokenValidationResult>.Success(mocks.tokenValidationResultMock.Object));
 
     mocks.tokenManagerMock.Setup(t => t.GetJwtConfirmationAccountTokenClaims(It.IsAny<TokenValidationResult>()))
@@ -66,7 +66,7 @@ public class ConfirmAccountAsyncTest
     result.Error.Should().BeNull();
     
     // Verify interactions
-    mocks.tokenManagerMock.Verify(t => t.ValidateAccountConfirmationToken(It.IsAny<JwtConfirmationAccountTokenDto>()), Times.Once);
+    mocks.tokenManagerMock.Verify(t => t.ValidateAccountConfirmationTokenAsync(It.IsAny<JwtConfirmationAccountTokenDto>()), Times.Once);
     mocks.tokenManagerMock.Verify(t => t.GetJwtConfirmationAccountTokenClaims(It.IsAny<TokenValidationResult>()), Times.Once);
     mocks.userRepositoryMock.Verify(u => u.ChangeConfirmedAccountColumnToTrue(It.IsAny<long>(), It.IsAny<bool>()), Times.Once);
     
@@ -82,7 +82,7 @@ public class ConfirmAccountAsyncTest
         List<IErrorMessage> errorMessages = [new ErrorMessage("You do not have authorization for continue.", "Confirm your credentials.")];
         var expectedResult = Result<TokenValidationResult>.Failure(new Error((byte)ErrorCodes.InvalidJwtToken, (byte)ErrorTypes.Unauthorized, errorMessages));
         
-        mocks.tokenManagerMock.Setup(t => t.ValidateAccountConfirmationToken(It.IsAny<JwtConfirmationAccountTokenDto>()))
+        mocks.tokenManagerMock.Setup(t => t.ValidateAccountConfirmationTokenAsync(It.IsAny<JwtConfirmationAccountTokenDto>()))
             .ReturnsAsync(expectedResult);
         
         var userService = new UserService(mocks.userRepositoryMock.Object, mocks.bcryptUtilMock.Object, mocks.tokenManagerMock.Object);
@@ -98,7 +98,7 @@ public class ConfirmAccountAsyncTest
         result.Error!.Type.Should().Be((byte)ErrorTypes.Unauthorized);
         
         // Verify interactions
-        mocks.tokenManagerMock.Verify(t => t.ValidateAccountConfirmationToken(It.IsAny<JwtConfirmationAccountTokenDto>()), Times.Once);
+        mocks.tokenManagerMock.Verify(t => t.ValidateAccountConfirmationTokenAsync(It.IsAny<JwtConfirmationAccountTokenDto>()), Times.Once);
         mocks.tokenManagerMock.Verify(t => t.GetJwtConfirmationAccountTokenClaims(It.IsAny<TokenValidationResult>()), Times.Never);
         mocks.userRepositoryMock.Verify(u => u.ChangeConfirmedAccountColumnToTrue(It.IsAny<long>(), It.IsAny<bool>()), Times.Never);
 
@@ -111,7 +111,7 @@ public class ConfirmAccountAsyncTest
         var mocks = GetAllMocks();
         var defaultObjects = GenerateDefaultObjects();
         
-        mocks.tokenManagerMock.Setup(t => t.ValidateAccountConfirmationToken(It.IsAny<JwtConfirmationAccountTokenDto>()))
+        mocks.tokenManagerMock.Setup(t => t.ValidateAccountConfirmationTokenAsync(It.IsAny<JwtConfirmationAccountTokenDto>()))
             .ReturnsAsync(Result<TokenValidationResult>.Success(mocks.tokenValidationResultMock.Object));
         
         mocks.tokenManagerMock.Setup(t => t.GetJwtConfirmationAccountTokenClaims(It.IsAny<TokenValidationResult>()))
@@ -129,7 +129,7 @@ public class ConfirmAccountAsyncTest
         await act.Should().ThrowAsync<Exception>().WithMessage("An error occured while trying to confirm the user.");
         
         // Verify interactions
-        mocks.tokenManagerMock.Verify(t => t.ValidateAccountConfirmationToken(It.IsAny<JwtConfirmationAccountTokenDto>()), Times.Once);
+        mocks.tokenManagerMock.Verify(t => t.ValidateAccountConfirmationTokenAsync(It.IsAny<JwtConfirmationAccountTokenDto>()), Times.Once);
         mocks.tokenManagerMock.Verify(t => t.GetJwtConfirmationAccountTokenClaims(It.IsAny<TokenValidationResult>()), Times.Once);
         mocks.userRepositoryMock.Verify(u => u.ChangeConfirmedAccountColumnToTrue(It.IsAny<long>(), It.IsAny<bool>()), Times.Once);
 

@@ -40,6 +40,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddApiUtils(this IServiceCollection services)
     {
         services.AddScoped<IBCryptUtil, BCryptUtil>();
+        services.AddScoped<IEmailSender, SmtpEmailSender>();
         
         return services;
     }
