@@ -37,14 +37,14 @@ public class UserController : ControllerBase
     } 
     
     [HttpPatch("email-confirmation/{token}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType<Error>(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> PatchConfirmAccount(string token)
     {
         var response = await _userService.ConfirmAccountAsync(new JwtTokenDto(token));
         
         if(response.IsSuccess)
-            return NoContent();
+            return Ok(response.Value);
         
         return Unauthorized(response.Error);
     }

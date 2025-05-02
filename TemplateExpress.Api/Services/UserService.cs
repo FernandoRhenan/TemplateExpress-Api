@@ -1,5 +1,6 @@
 using System.Transactions;
 using FluentValidation;
+using Microsoft.IdentityModel.Tokens;
 using TemplateExpress.Api.Dto.UserDto;
 using TemplateExpress.Api.Entities;
 using TemplateExpress.Api.EnumResponseTypes;
@@ -91,24 +92,23 @@ public class UserService : IUserService
 
     }
 
-    public async Task<Result<string>> ConfirmAccountAsync(JwtTokenDto jwtTokenDto)
+    public async Task<Result<JwtTokenDto>> ConfirmAccountAsync(JwtTokenDto jwtTokenDto)
     {
         var tokenValidation = await _tokenManager.ValidateAccountConfirmationTokenAsync(jwtTokenDto);
-
         if (!tokenValidation.IsSuccess)
         {
-            return Result<string>.Failure(tokenValidation.Error!);
+            return Result<JwtTokenDto>.Failure(tokenValidation.Error!);
         }
-
         var userIdAndEmail = _tokenManager.GetJwtConfirmationAccountTokenClaims(tokenValidation.Value!);
 
-        var isNowConfirmedUser = await _userRepository.ChangeConfirmedAccountColumnToTrue(userIdAndEmail.Id);
+        var user = await _userRepository.ChangeConfirmedAccountColumnToTrue(userIdAndEmail.Id);
         
-        if (isNowConfirmedUser) return Result<string>.Success(String.Empty);
-        
-        // TODO: return auth token
-        
-        throw new Exception("An error occured while trying to confirm the user.");
+        if (user == null) throw new Exception("An error occured while trying to confirm the user.");
+
+        var userIdAndRoleDto = new UserIdAndRoleDto(user.Id, user.Role);
+        var authToken = _tokenManager.GenerateAuthenticationToken(userIdAndRoleDto);
+        var authTokenDto = new JwtTokenDto(authToken);
+        return Result<JwtTokenDto>.Success(authTokenDto);
         
     }
 
