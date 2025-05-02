@@ -20,9 +20,9 @@ public class EmailController : ControllerBase
     [HttpPost("send-confirmation-token")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType<Error>(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> PostEmailConfirmationToken([FromBody] JwtConfirmationAccountTokenDto jwtConfirmationAccountTokenDto)
+    public async Task<IActionResult> PostEmailConfirmationToken([FromBody] JwtTokenDto jwtTokenDto)
     {
-        var response = await _emailService.SendEmailConfirmationTokenAsync(jwtConfirmationAccountTokenDto);
+        var response = await _emailService.SendEmailConfirmationTokenAsync(jwtTokenDto);
 
         if (response.IsSuccess)
             return NoContent();

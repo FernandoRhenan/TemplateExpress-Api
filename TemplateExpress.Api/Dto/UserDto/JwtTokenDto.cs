@@ -1,5 +1,5 @@
 namespace TemplateExpress.Api.Dto.UserDto;
 
-public record JwtConfirmationAccountTokenDto(
+public record JwtTokenDto(
     string Token
     );

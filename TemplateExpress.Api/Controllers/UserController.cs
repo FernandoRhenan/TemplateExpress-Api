@@ -1,9 +1,9 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using TemplateExpress.Api.Dto.UserDto;
+using TemplateExpress.Api.EnumResponseTypes;
 using TemplateExpress.Api.Interfaces.Services;
 using TemplateExpress.Api.Results;
-using TemplateExpress.Api.Results.EnumResponseTypes;
 
 namespace TemplateExpress.Api.Controllers;
 
@@ -41,7 +41,7 @@ public class UserController : ControllerBase
     [ProducesResponseType<Error>(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> PatchConfirmAccount(string token)
     {
-        var response = await _userService.ConfirmAccountAsync(new JwtConfirmationAccountTokenDto(token));
+        var response = await _userService.ConfirmAccountAsync(new JwtTokenDto(token));
         
         if(response.IsSuccess)
             return NoContent();
@@ -50,7 +50,7 @@ public class UserController : ControllerBase
     }
     
     [HttpPost("generate-confirmation-account-token")]
-    [ProducesResponseType<JwtConfirmationAccountTokenDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<JwtTokenDto>(StatusCodes.Status200OK)]
     [ProducesResponseType<Error>(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> PostGenerateConfirmationAccountToken([FromBody] EmailAndPasswordDto emailAndPasswordDto, [FromServices] IValidator<EmailAndPasswordDto> validator)
     {
@@ -63,4 +63,19 @@ public class UserController : ControllerBase
         return BadRequest(response.Error);
             
     }
+
+
+    [HttpPost("login")]
+    [ProducesResponseType<Error>(StatusCodes.Status200OK)]
+    [ProducesResponseType<Error>(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> PostLogin([FromBody] EmailAndPasswordDto emailAndPasswordDto, [FromServices] IValidator<EmailAndPasswordDto> validator)
+    {
+        var response = await _userService.LoginAsync(emailAndPasswordDto, validator);
+        
+        if(response.IsSuccess)
+            return Ok(response.Value);
+        
+        return BadRequest(response.Error);
+    }
+    
 }

@@ -8,141 +8,133 @@ using TemplateExpress.Api.Validations.Users;
 
 namespace TemplateExpress.Tests.Services.Users;
 
-public class GenerateConfirmationAccountTokenAsyncTest
+public class LoginAsyncTest
 {
-   
-    [Fact(DisplayName = "Given the Confirmation Account Token Generation, when the user data is valid, then return a success response with the confirmation token.")]
+
+    [Fact(DisplayName = "Given the user login, when it exists and is validated, then it should return a access token")]
     public async Task Success()
     {
         // Arrange
         var defaultObjects = DefaultObjects.GenerateDefaultObjects();
         var mocks = DefaultMocks.GetAllMocks();
-
+        var validator = new LoginUserValidator();
+        
         mocks.userRepositoryMock.Setup(u => u.FindEmailAsync(It.IsAny<UserEmailDto>()))
             .ReturnsAsync(defaultObjects.userEntity);
 
         mocks.bcryptUtilMock.Setup(b => b.ComparePassword(It.IsAny<string>(), It.IsAny<string>()))
             .Returns(true);
-
-        mocks.tokenManagerMock.Setup(t => t.GenerateAccountConfirmationToken(It.IsAny<UserIdAndEmailDto>()))
+        
+        mocks.tokenManagerMock.Setup(t => t.GenerateAuthenticationToken(It.IsAny<UserIdAndRoleDto>()))
             .Returns("token");
         
-        var expectedResult = Result<JwtTokenDto>.Success(new JwtTokenDto("token")); 
-        
         var userService = new UserService(mocks.userRepositoryMock.Object, mocks.bcryptUtilMock.Object, mocks.tokenManagerMock.Object);
-        var validator = new LoginUserValidator();
-
+        
         // Act
-        var result = await userService.GenerateConfirmationAccountTokenAsync(defaultObjects.emailAndPasswordDto, validator);
+        var result = await userService.LoginAsync(defaultObjects.emailAndPasswordDto, validator);
 
         // Assert
         result.Should().BeOfType<Result<JwtTokenDto>>();
-        result.Should().BeEquivalentTo(expectedResult);
         result.IsSuccess.Should().BeTrue();
         result.Error.Should().BeNull();
         
         // Verify interactions
         mocks.userRepositoryMock.Verify(u => u.FindEmailAsync(It.IsAny<UserEmailDto>()), Times.Once);
         mocks.bcryptUtilMock.Verify(b => b.ComparePassword(It.IsAny<string>(), It.IsAny<string>()), Times.Once);
-        mocks.tokenManagerMock.Verify(t => t.GenerateAccountConfirmationToken(It.IsAny<UserIdAndEmailDto>()), Times.Once);
-
+        mocks.tokenManagerMock.Verify(t => t.GenerateAuthenticationToken(It.IsAny<UserIdAndRoleDto>()), Times.Once);
     }
-
-    [Fact(DisplayName = "Given the Confirmation Account Token Generation, when the user data is invalid, then return a validation error response.")]
+    
+    [Fact(DisplayName = "Given the user login, when it is invalid, then it should return a validation error")]
     public async Task InvalidUser()
     {
+        // Arrange
         var mocks = DefaultMocks.GetAllMocks();
-
+        var validator = new LoginUserValidator();
+        
         var userService = new UserService(mocks.userRepositoryMock.Object, mocks.bcryptUtilMock.Object, mocks.tokenManagerMock.Object);
         
         var invalidEmailAndPasswordDto = new EmailAndPasswordDto("", "123123");
-        var validator = new LoginUserValidator();
-
+        
         // Act
-        var result = await userService.GenerateConfirmationAccountTokenAsync(invalidEmailAndPasswordDto, validator);
+        var result = await userService.LoginAsync(invalidEmailAndPasswordDto, validator);
 
         // Assert
         result.Should().BeOfType<Result<JwtTokenDto>>();
         result.IsSuccess.Should().BeFalse();
-        result.Error?.Code.Should().Be((byte)ErrorCodes.InvalidInput);
-        result.Error?.Type.Should().Be((byte)ErrorTypes.InputValidationError);
-        result.Error?.Messages.Should().BeOfType<List<IErrorMessage>>();
+        result.Error.Should().BeOfType<Error>();
+        result.Error!.Code.Should().Be((byte)ErrorCodes.InvalidInput);
+        result.Error!.Type.Should().Be((byte)ErrorTypes.InputValidationError);
+        result.Error!.Messages.Should().BeOfType<List<IErrorMessage>>();
         
+        
+        // Verify interactions
         mocks.userRepositoryMock.Verify(u => u.FindEmailAsync(It.IsAny<UserEmailDto>()), Times.Never);
         mocks.bcryptUtilMock.Verify(b => b.ComparePassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
         mocks.tokenManagerMock.Verify(t => t.GenerateAccountConfirmationToken(It.IsAny<UserIdAndEmailDto>()), Times.Never);
     }
-
-    [Fact(DisplayName = "Given the Confirmation Account Token Generation, when the user does not exist, then return a validation error.")]
-    public async Task UserNotFound()
+    
+    [Fact(DisplayName = "Given the user login, when it the user don't exists, then it should return a business validation error")]
+    public async Task WrongUserEmail()
     {
         // Arrange
         var defaultObjects = DefaultObjects.GenerateDefaultObjects();
         var mocks = DefaultMocks.GetAllMocks();
-        
-        List<IErrorMessage> errorMessages = [new ErrorMessage("Invalid Email or Password.", "Post valid credentials.")];
-        Error error = new((byte)ErrorCodes.InvalidInput, (byte)ErrorTypes.BusinessLogicValidationError, errorMessages);
-
-        mocks.userRepositoryMock.Setup(u => u.FindEmailAsync(It.IsAny<UserEmailDto>()));
-        
-        var expectedResult = Result<JwtTokenDto>.Failure(error); 
-        
-        var userService = new UserService(mocks.userRepositoryMock.Object, mocks.bcryptUtilMock.Object, mocks.tokenManagerMock.Object);
         var validator = new LoginUserValidator();
 
-        // Act
-        var result = await userService.GenerateConfirmationAccountTokenAsync(defaultObjects.emailAndPasswordDto, validator);
+        mocks.userRepositoryMock.Setup(u => u.FindEmailAsync(It.IsAny<UserEmailDto>()));
+            
+        var userService = new UserService(mocks.userRepositoryMock.Object, mocks.bcryptUtilMock.Object, mocks.tokenManagerMock.Object);
         
+        // Act
+        var result = await userService.LoginAsync(defaultObjects.emailAndPasswordDto, validator);
+
         // Assert
         result.Should().BeOfType<Result<JwtTokenDto>>();
-        result.Should().BeEquivalentTo(expectedResult);
         result.IsSuccess.Should().BeFalse();
-        result.Error?.Code.Should().Be((byte)ErrorCodes.InvalidInput);
-        result.Error?.Type.Should().Be((byte)ErrorTypes.BusinessLogicValidationError);
-        result.Error?.Messages.Should().BeOfType<List<IErrorMessage>>();
+        result.Error.Should().BeOfType<Error>();
+        result.Error!.Code.Should().Be((byte)ErrorCodes.InvalidInput);
+        result.Error!.Type.Should().Be((byte)ErrorTypes.BusinessLogicValidationError);
+        result.Error!.Messages.Should().BeOfType<List<IErrorMessage>>();
         
         // Verify interactions
         mocks.userRepositoryMock.Verify(u => u.FindEmailAsync(It.IsAny<UserEmailDto>()), Times.Once);
         mocks.bcryptUtilMock.Verify(b => b.ComparePassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
-        mocks.tokenManagerMock.Verify(t => t.GenerateAccountConfirmationToken(It.IsAny<UserIdAndEmailDto>()), Times.Never);
+        mocks.tokenManagerMock.Verify(t => t.GenerateAuthenticationToken(It.IsAny<UserIdAndRoleDto>()), Times.Never);
     }
     
-    [Fact(DisplayName = "Given the Confirmation Account Token Generation, when the user password is wrong, then return a validation error.")]
-    public async Task InvalidPassword()
+    
+    [Fact(DisplayName = "Given the user login, when it the user password is wrong, then it should return a business validation error")]
+    public async Task WrongUserPassword()
     {
         // Arrange
         var defaultObjects = DefaultObjects.GenerateDefaultObjects();
         var mocks = DefaultMocks.GetAllMocks();
+        var validator = new LoginUserValidator();
         
-        List<IErrorMessage> errorMessages = [new ErrorMessage("Invalid Email or Password.", "Post valid credentials.")];
-        Error error = new((byte)ErrorCodes.InvalidInput, (byte)ErrorTypes.BusinessLogicValidationError, errorMessages);
-
         mocks.userRepositoryMock.Setup(u => u.FindEmailAsync(It.IsAny<UserEmailDto>()))
             .ReturnsAsync(defaultObjects.userEntity);
 
         mocks.bcryptUtilMock.Setup(b => b.ComparePassword(It.IsAny<string>(), It.IsAny<string>()))
             .Returns(false);
         
-        var expectedResult = Result<JwtTokenDto>.Failure(error); 
-        
         var userService = new UserService(mocks.userRepositoryMock.Object, mocks.bcryptUtilMock.Object, mocks.tokenManagerMock.Object);
-        var validator = new LoginUserValidator();
-
-        // Act
-        var result = await userService.GenerateConfirmationAccountTokenAsync(defaultObjects.emailAndPasswordDto, validator);
         
+        // Act
+        var result = await userService.LoginAsync(defaultObjects.emailAndPasswordDto, validator);
+
         // Assert
         result.Should().BeOfType<Result<JwtTokenDto>>();
-        result.Should().BeEquivalentTo(expectedResult);
         result.IsSuccess.Should().BeFalse();
-        result.Error?.Code.Should().Be((byte)ErrorCodes.InvalidInput);
-        result.Error?.Type.Should().Be((byte)ErrorTypes.BusinessLogicValidationError);
-        result.Error?.Messages.Should().BeOfType<List<IErrorMessage>>();
+        result.Error.Should().BeOfType<Error>();
+        result.Error!.Code.Should().Be((byte)ErrorCodes.InvalidInput);
+        result.Error!.Type.Should().Be((byte)ErrorTypes.BusinessLogicValidationError);
+        result.Error!.Messages.Should().BeOfType<List<IErrorMessage>>();
         
         // Verify interactions
         mocks.userRepositoryMock.Verify(u => u.FindEmailAsync(It.IsAny<UserEmailDto>()), Times.Once);
         mocks.bcryptUtilMock.Verify(b => b.ComparePassword(It.IsAny<string>(), It.IsAny<string>()), Times.Once);
-        mocks.tokenManagerMock.Verify(t => t.GenerateAccountConfirmationToken(It.IsAny<UserIdAndEmailDto>()), Times.Never);
+        mocks.tokenManagerMock.Verify(t => t.GenerateAuthenticationToken(It.IsAny<UserIdAndRoleDto>()), Times.Never);
     }
     
 }
+

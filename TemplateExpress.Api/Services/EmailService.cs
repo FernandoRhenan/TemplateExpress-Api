@@ -17,9 +17,9 @@ public class EmailService : IEmailService
         _emailSender = emailSender;
     }
     
-    public async Task<Result<string>> SendEmailConfirmationTokenAsync(JwtConfirmationAccountTokenDto jwtConfirmationAccountTokenDto)
+    public async Task<Result<string>> SendEmailConfirmationTokenAsync(JwtTokenDto jwtTokenDto)
     {
-        var tokenValidation = await _tokenManager.ValidateAccountConfirmationTokenAsync(jwtConfirmationAccountTokenDto);
+        var tokenValidation = await _tokenManager.ValidateAccountConfirmationTokenAsync(jwtTokenDto);
         
         if (!tokenValidation.IsSuccess)
         {
@@ -29,7 +29,7 @@ public class EmailService : IEmailService
         var userIdAndEmail = _tokenManager.GetJwtConfirmationAccountTokenClaims(tokenValidation.Value!);
         
         // TODO: Upgrade this HTML message
-        var htmlMessage = $"<a href='http://localhost:5290/email-confirmation/{jwtConfirmationAccountTokenDto.Token}'>Clique aqui para confirmar</a>";
+        var htmlMessage = $"<a href='http://localhost:5290/email-confirmation/{jwtTokenDto.Token}'>Clique aqui para confirmar</a>";
 
         await _emailSender.SendEmailAsync(userIdAndEmail.Email, "Email Confirmation", htmlMessage);
 

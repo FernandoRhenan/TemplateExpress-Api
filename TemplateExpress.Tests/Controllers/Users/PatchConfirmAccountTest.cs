@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using TemplateExpress.Api.Controllers;
 using TemplateExpress.Api.Dto.UserDto;
+using TemplateExpress.Api.EnumResponseTypes;
 using TemplateExpress.Api.Interfaces.Services;
 using TemplateExpress.Api.Results;
-using TemplateExpress.Api.Results.EnumResponseTypes;
 
 namespace TemplateExpress.Tests.Controllers.Users;
 
@@ -19,9 +19,9 @@ public class PatchConfirmAccountTest
         var userServiceMock = new Mock<IUserService>();
         var userController = new UserController(userServiceMock.Object);
         const string token = "token";
-        var jwtConfirmationAccountTokenDto = new JwtConfirmationAccountTokenDto(token);
+        var jwtConfirmationAccountTokenDto = new JwtTokenDto(token);
 
-        userServiceMock.Setup(u => u.ConfirmAccountAsync(It.IsAny<JwtConfirmationAccountTokenDto>()))
+        userServiceMock.Setup(u => u.ConfirmAccountAsync(It.IsAny<JwtTokenDto>()))
             .ReturnsAsync(Result<string>.Success(String.Empty));
         
         // Act
@@ -42,12 +42,12 @@ public class PatchConfirmAccountTest
         var userServiceMock = new Mock<IUserService>();
         var userController = new UserController(userServiceMock.Object);
         const string token = "token";
-        var jwtConfirmationAccountTokenDto = new JwtConfirmationAccountTokenDto(token);
+        var jwtConfirmationAccountTokenDto = new JwtTokenDto(token);
 
         List<IErrorMessage> errorMessages = [new ErrorMessage("You do not have authorization for continue.", "Confirm your credentials.")];
         var error = Result<string>.Failure(new Error((byte)ErrorCodes.InvalidJwtToken, (byte)ErrorTypes.Unauthorized, errorMessages));
         
-        userServiceMock.Setup(u => u.ConfirmAccountAsync(It.IsAny<JwtConfirmationAccountTokenDto>()))
+        userServiceMock.Setup(u => u.ConfirmAccountAsync(It.IsAny<JwtTokenDto>()))
             .ReturnsAsync(error);
         
         // Act
