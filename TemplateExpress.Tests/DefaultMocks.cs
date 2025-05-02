@@ -17,7 +17,8 @@ internal static class DefaultMocks
        Mock<ITokenManager> tokenManagerMock,
        Mock<IDbContextTransaction> transactionMock,
        Mock<TokenValidationResult> tokenValidationResultMock,
-       Mock<IEmailSender>emailSenderMock
+       Mock<IEmailSender>emailSenderMock,
+       Mock<SecurityToken> securityTokenMock
        ) GetAllMocks()
     {
         var userRepositoryMock = new Mock<IUserRepository>();
@@ -26,8 +27,9 @@ internal static class DefaultMocks
         var transactionMock = new Mock<IDbContextTransaction>();
         var tokenValidationResultMock = new Mock<TokenValidationResult>();
         var emailSenderMock = new Mock<IEmailSender>();
+        var securityTokenMock = new Mock<SecurityToken>();
 
-        return (userRepositoryMock, bcryptUtilMock, tokenManagerMock, transactionMock, tokenValidationResultMock, emailSenderMock);
+        return (userRepositoryMock, bcryptUtilMock, tokenManagerMock, transactionMock, tokenValidationResultMock, emailSenderMock, securityTokenMock);
     }
     
 }

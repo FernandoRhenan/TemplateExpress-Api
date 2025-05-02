@@ -7,7 +7,7 @@ public interface IUserRepository : IRepositoryBase
 {
     UserEntity InsertUser(UserEntity user);
     Task<bool> FindAnEmailAsync(UserEmailDto userEmailDto);
-    Task<bool> ChangeConfirmedAccountColumnToTrue(long id, bool save = true);
+    Task<UserEntity?> ChangeConfirmedAccountColumnToTrue(long id, bool save = true);
     Task<UserEntity?> FindEmailAsync(UserEmailDto userEmailDto);
 
 }

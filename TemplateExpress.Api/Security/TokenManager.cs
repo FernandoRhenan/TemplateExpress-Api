@@ -79,15 +79,15 @@ public class TokenManager : ITokenManager
             ClockSkew = TimeSpan.Zero
         };
         
-        var tokenValidation = await handler.ValidateTokenAsync(jwtTokenDto.Token, validationParameters);
+        var tokenValidationResult = await handler.ValidateTokenAsync(jwtTokenDto.Token, validationParameters);
 
-        if (!tokenValidation.IsValid)
+        if (!tokenValidationResult.IsValid)
         {
             List<IErrorMessage> errorMessages = [new ErrorMessage("You do not have authorization for continue.", "Confirm your credentials.")];
             return Result<TokenValidationResult>.Failure(new Error((byte)ErrorCodes.InvalidJwtToken, (byte)ErrorTypes.Unauthorized, errorMessages));
         }
 
-        return Result<TokenValidationResult>.Success(tokenValidation);
+        return Result<TokenValidationResult>.Success(tokenValidationResult);
     }
     
     public UserIdAndEmailDto GetJwtConfirmationAccountTokenClaims(TokenValidationResult tokenValidationResult)

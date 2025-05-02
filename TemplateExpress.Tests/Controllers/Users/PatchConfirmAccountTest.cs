@@ -16,22 +16,27 @@ public class PatchConfirmAccountTest
     public async Task Success()
     {
         // Arrange
+        var mocks = DefaultMocks.GetAllMocks();
+        
         var userServiceMock = new Mock<IUserService>();
         var userController = new UserController(userServiceMock.Object);
-        const string token = "token";
-        var jwtConfirmationAccountTokenDto = new JwtTokenDto(token);
+        const string authToken = "authToken";
+        const string confirmationToken = "confirmationToken";
+        var jwtAuthTokenDto = new JwtTokenDto(authToken);
+        var jwtConfirmationAccountTokenDto = new JwtTokenDto(confirmationToken);
 
-        userServiceMock.Setup(u => u.ConfirmAccountAsync(It.IsAny<JwtTokenDto>()))
-            .ReturnsAsync(Result<string>.Success(String.Empty));
+        userServiceMock.Setup(u => u.ConfirmAccountAsync(jwtConfirmationAccountTokenDto))
+            .ReturnsAsync(Result<JwtTokenDto>.Success(jwtAuthTokenDto));
         
         // Act
-        var result = await userController.PatchConfirmAccount(token);
+        var result = await userController.PatchConfirmAccount(confirmationToken);
 
         // Assert
-        result.Should().BeOfType<NoContentResult>();
+        result.Should().BeOfType<OkObjectResult>();
         
         // Verify interactions
         userServiceMock.Verify(u => u.ConfirmAccountAsync(jwtConfirmationAccountTokenDto), Times.Once);
+        userServiceMock.Verify(u => u.ConfirmAccountAsync(jwtAuthTokenDto), Times.Never);
 
     }
     
@@ -41,23 +46,26 @@ public class PatchConfirmAccountTest
         // Arrange
         var userServiceMock = new Mock<IUserService>();
         var userController = new UserController(userServiceMock.Object);
-        const string token = "token";
-        var jwtConfirmationAccountTokenDto = new JwtTokenDto(token);
+        const string authToken = "authToken";
+        const string confirmationToken = "confirmationToken";
+        var jwtAuthTokenDto = new JwtTokenDto(authToken);
+        var jwtConfirmationAccountTokenDto = new JwtTokenDto(confirmationToken);
 
         List<IErrorMessage> errorMessages = [new ErrorMessage("You do not have authorization for continue.", "Confirm your credentials.")];
-        var error = Result<string>.Failure(new Error((byte)ErrorCodes.InvalidJwtToken, (byte)ErrorTypes.Unauthorized, errorMessages));
+        var error = Result<JwtTokenDto>.Failure(new Error((byte)ErrorCodes.InvalidJwtToken, (byte)ErrorTypes.Unauthorized, errorMessages));
         
         userServiceMock.Setup(u => u.ConfirmAccountAsync(It.IsAny<JwtTokenDto>()))
             .ReturnsAsync(error);
         
         // Act
-        var result = await userController.PatchConfirmAccount(token);
+        var result = await userController.PatchConfirmAccount(confirmationToken);
 
         // Assert
         result.Should().BeOfType<UnauthorizedObjectResult>();
         
         // Verify interactions
         userServiceMock.Verify(u => u.ConfirmAccountAsync(jwtConfirmationAccountTokenDto), Times.Once);
+        userServiceMock.Verify(u => u.ConfirmAccountAsync(jwtAuthTokenDto), Times.Never);
 
     }
     
