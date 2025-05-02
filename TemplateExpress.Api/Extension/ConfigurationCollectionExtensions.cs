@@ -6,6 +6,7 @@ public static class ConfigurationCollectionExtensions
 {
     public static IServiceCollection ConfigureOptions(this IServiceCollection services, IConfiguration configuration)
     {
+        
         services.Configure<JwtAccountConfirmationOptions>(
             configuration.GetSection(JwtAccountConfirmationOptions.Section));
 

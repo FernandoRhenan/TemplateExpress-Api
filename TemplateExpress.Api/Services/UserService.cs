@@ -1,6 +1,5 @@
 using System.Transactions;
 using FluentValidation;
-using Microsoft.IdentityModel.Tokens;
 using TemplateExpress.Api.Dto.UserDto;
 using TemplateExpress.Api.Entities;
 using TemplateExpress.Api.EnumResponseTypes;
@@ -10,7 +9,6 @@ using TemplateExpress.Api.Interfaces.Security;
 using TemplateExpress.Api.Interfaces.Services;
 using TemplateExpress.Api.Interfaces.Utils;
 using TemplateExpress.Api.Results;
-using ValidationResult = FluentValidation.Results.ValidationResult;
 
 namespace TemplateExpress.Api.Services;
 

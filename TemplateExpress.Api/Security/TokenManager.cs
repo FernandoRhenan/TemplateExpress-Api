@@ -41,7 +41,9 @@ public class TokenManager : ITokenManager
         {
             SigningCredentials = credentials,
             Expires = DateTime.UtcNow.AddHours(12),
-            Subject = GenerateAccountConfirmationTokenClaims(userIdAndEmailDto)
+            Subject = GenerateAccountConfirmationTokenClaims(userIdAndEmailDto),
+            Issuer = _jwtAccountConfirmationOptions.Issuer,
+            Audience = _jwtAccountConfirmationOptions.Audience,
         };
         
         // Generate a Token
@@ -127,10 +129,12 @@ public class TokenManager : ITokenManager
         {
             SigningCredentials = credentials,
             Expires = DateTime.UtcNow.AddDays(7),
-            Subject = GenerateAuthTokenClaims(userIdAndRoleDto)
+            Subject = GenerateAuthTokenClaims(userIdAndRoleDto),
+            Issuer = _jwtAuthOptions.Issuer,
+            Audience = _jwtAuthOptions.Audience
         };
         
-        var token = handler.CreateJwtSecurityToken(tokenDescriptor);
+        var token = handler.CreateToken(tokenDescriptor);
         
         return handler.WriteToken(token);
     }

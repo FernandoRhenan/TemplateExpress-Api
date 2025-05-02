@@ -1,8 +1,8 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using TemplateExpress.Api.Data;
 using TemplateExpress.Api.Extension;
 using TemplateExpress.Api.Middlewares;
-using TemplateExpress.Api.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,8 +16,11 @@ builder.Services.AddApiServices();
 builder.Services.AddApiSecurities();
 builder.Services.AddApiUtils();
 builder.Services.AddInputValidators();
+builder.Services.AddAllMiddlewares();
 
-builder.Services.AddTransient<GlobalExceptionHandlingMiddleware>();
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, 
+        options => builder.Configuration.Bind("JwtAuthOptions", options));
 
 builder.Services.AddControllers();
 
