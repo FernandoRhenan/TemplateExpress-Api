@@ -4,28 +4,15 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using TemplateExpress.Api.Controllers;
 using TemplateExpress.Api.Dto.UserDto;
+using TemplateExpress.Api.EnumResponseTypes;
 using TemplateExpress.Api.Interfaces.Services;
 using TemplateExpress.Api.Results;
-using TemplateExpress.Api.Results.EnumResponseTypes;
 using TemplateExpress.Api.Validations.Users;
 
 namespace TemplateExpress.Tests.Controllers.Users;
 
 public class PostUserTest
 {
-
-    private (CreateUserDto createUserDto, List<IErrorMessage> errorMessages) GenerateDefaultObjects()
-    {
-        var createUserDto = new CreateUserDto("test@test.com", "comusertest1", "=d#OdcA)53?p7$$$Sv_0 ");
-        
-        var errorMessages = new List<IErrorMessage>
-        {
-            new ErrorMessage("Invalid input", "Check the fields.")
-        };
-        
-        return (createUserDto, errorMessages);
-    }
-    
     
     [Fact(DisplayName = "Given a PostUser request, when it is all right, then return a success response.")]
     public async Task ValidUser()
@@ -33,11 +20,11 @@ public class PostUserTest
         // Arrange
         var userServiceMock = new Mock<IUserService>();
         var userController = new UserController(userServiceMock.Object);
-        var jwtConfirmationAccountToken = new JwtConfirmationAccountTokenDto("token");
+        var jwtConfirmationAccountToken = new JwtTokenDto("token");
         var validator = new CreateUserValidator();
-        var defaultObjects = GenerateDefaultObjects();
+        var defaultObjects = DefaultObjects.GenerateDefaultObjects();
         
-        var mockServiceResponse = Result<JwtConfirmationAccountTokenDto>.Success(jwtConfirmationAccountToken);
+        var mockServiceResponse = Result<JwtTokenDto>.Success(jwtConfirmationAccountToken);
         
         userServiceMock
             .Setup(s => s.CreateUserAndTokenAsync(defaultObjects.createUserDto, validator))
@@ -48,7 +35,7 @@ public class PostUserTest
         
         // Assert
         var okObjectResult = result as OkObjectResult;
-        var resultValue = okObjectResult?.Value as JwtConfirmationAccountTokenDto;
+        var resultValue = okObjectResult?.Value as JwtTokenDto;
 
         result.Should().BeOfType<OkObjectResult>();
         resultValue?.Token.Should().NotBeNull().And.Be(jwtConfirmationAccountToken.Token);
@@ -63,10 +50,9 @@ public class PostUserTest
         var userServiceMock = new Mock<IUserService>();
         var usersController = new UserController(userServiceMock.Object);
         var validator = new CreateUserValidator();
-        var defaultObjects = GenerateDefaultObjects();
-
+        var defaultObjects = DefaultObjects.GenerateDefaultObjects();
         
-        var mockServiceResponse = Result<JwtConfirmationAccountTokenDto>
+        var mockServiceResponse = Result<JwtTokenDto>
             .Failure(new Error((byte)ErrorCodes.InvalidInput, (byte)ErrorTypes.InputValidationError, defaultObjects.errorMessages));
         
         userServiceMock
@@ -94,10 +80,9 @@ public class PostUserTest
         var userServiceMock = new Mock<IUserService>();
         var usersController = new UserController(userServiceMock.Object);
         var validator = new CreateUserValidator();
-        var defaultObjects = GenerateDefaultObjects();
-
+        var defaultObjects = DefaultObjects.GenerateDefaultObjects();
         
-        var mockServiceResponse = Result<JwtConfirmationAccountTokenDto>.Failure(new Error((byte)ErrorCodes.EmailAlreadyExists, (byte)ErrorTypes.BusinessLogicValidationError, defaultObjects.errorMessages));
+        var mockServiceResponse = Result<JwtTokenDto>.Failure(new Error((byte)ErrorCodes.EmailAlreadyExists, (byte)ErrorTypes.BusinessLogicValidationError, defaultObjects.errorMessages));
         userServiceMock.Setup(s => s.CreateUserAndTokenAsync(defaultObjects.createUserDto, validator)).ReturnsAsync(mockServiceResponse);
     
         // Act

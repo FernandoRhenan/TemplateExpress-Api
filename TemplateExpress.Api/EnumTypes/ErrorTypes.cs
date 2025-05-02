@@ -1,4 +1,4 @@
-namespace TemplateExpress.Api.Results.EnumResponseTypes;
+namespace TemplateExpress.Api.EnumResponseTypes;
 
 public enum ErrorTypes : byte
 {

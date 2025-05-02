@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TemplateExpress.Api.Entities;
+using TemplateExpress.Api.EnumTypes;
+
 namespace TemplateExpress.Api.Data;
 
 public class DataContext(DbContextOptions<DataContext> options) : DbContext(options)
@@ -18,6 +20,7 @@ public class DataContext(DbContextOptions<DataContext> options) : DbContext(opti
             entity.Property(u => u.Email).IsRequired();
             entity.Property(u => u.Password).IsRequired();
             entity.Property(u => u.Username).IsRequired();
+            entity.Property(u => u.Role).IsRequired().HasDefaultValue(UserRoles.User).HasConversion<string>();
             entity.Property(u => u.ConfirmedAccount).IsRequired().HasDefaultValue(false);
             entity.Property(u => u.CreatedAt).IsRequired().HasColumnType("timestamp without time zone");
             entity.Property(u => u.UpdatedAt).IsRequired().HasColumnType("timestamp without time zone");

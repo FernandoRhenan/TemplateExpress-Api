@@ -7,6 +7,7 @@ namespace TemplateExpress.Api.Interfaces.Security;
 public interface ITokenManager
 {
     string GenerateAccountConfirmationToken(UserIdAndEmailDto userIdAndEmailDto);
-    Task<Result<TokenValidationResult>> ValidateAccountConfirmationTokenAsync(JwtConfirmationAccountTokenDto jwtConfirmationAccountTokenDto);
+    Task<Result<TokenValidationResult>> ValidateAccountConfirmationTokenAsync(JwtTokenDto jwtTokenDto);
     UserIdAndEmailDto GetJwtConfirmationAccountTokenClaims(TokenValidationResult tokenValidationResult);
+    string GenerateAuthenticationToken(UserIdAndRoleDto userIdAndRoleDto);
 }

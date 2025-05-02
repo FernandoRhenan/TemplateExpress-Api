@@ -8,6 +8,9 @@ public static class ConfigurationCollectionExtensions
     {
         services.Configure<JwtAccountConfirmationOptions>(
             configuration.GetSection(JwtAccountConfirmationOptions.Section));
+
+        services.Configure<JwtAuthOptions>(
+            configuration.GetSection(JwtAuthOptions.Section));
         
         services.Configure<EmailConfigurationOptions>(
             configuration.GetSection(EmailConfigurationOptions.Section));

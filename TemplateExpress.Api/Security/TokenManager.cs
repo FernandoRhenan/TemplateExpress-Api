@@ -4,10 +4,11 @@ using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using TemplateExpress.Api.Dto.UserDto;
+using TemplateExpress.Api.EnumResponseTypes;
+using TemplateExpress.Api.EnumTypes;
 using TemplateExpress.Api.Interfaces.Security;
 using TemplateExpress.Api.Options;
 using TemplateExpress.Api.Results;
-using TemplateExpress.Api.Results.EnumResponseTypes;
 
 namespace TemplateExpress.Api.Security;
 
@@ -15,9 +16,11 @@ public class TokenManager : ITokenManager
 {
     
     private readonly JwtAccountConfirmationOptions _jwtAccountConfirmationOptions;
-    public TokenManager(IOptions<JwtAccountConfirmationOptions> jwtAccountConfirmationOptions)
+    private readonly JwtAuthOptions _jwtAuthOptions;
+    public TokenManager(IOptions<JwtAccountConfirmationOptions> jwtAccountConfirmationOptions, IOptions<JwtAuthOptions> jwtAuthOptions)
     {
         _jwtAccountConfirmationOptions = jwtAccountConfirmationOptions.Value;
+        _jwtAuthOptions = jwtAuthOptions.Value;
     }
     public string GenerateAccountConfirmationToken(UserIdAndEmailDto userIdAndEmailDto)
     {
@@ -57,7 +60,7 @@ public class TokenManager : ITokenManager
         return ci;
     }
 
-    public async Task<Result<TokenValidationResult>> ValidateAccountConfirmationTokenAsync(JwtConfirmationAccountTokenDto jwtConfirmationAccountTokenDto)
+    public async Task<Result<TokenValidationResult>> ValidateAccountConfirmationTokenAsync(JwtTokenDto jwtTokenDto)
     {
         var jwtSecret = _jwtAccountConfirmationOptions.Secret;
         if (string.IsNullOrWhiteSpace(jwtSecret)) throw new InvalidOperationException("Missing JWT Secret.");
@@ -76,7 +79,7 @@ public class TokenManager : ITokenManager
             ClockSkew = TimeSpan.Zero
         };
         
-        var tokenValidation = await handler.ValidateTokenAsync(jwtConfirmationAccountTokenDto.Token, validationParameters);
+        var tokenValidation = await handler.ValidateTokenAsync(jwtTokenDto.Token, validationParameters);
 
         if (!tokenValidation.IsValid)
         {
@@ -106,5 +109,39 @@ public class TokenManager : ITokenManager
 
         return new UserIdAndEmailDto(id, email);
     }
+
+    public string GenerateAuthenticationToken(UserIdAndRoleDto userIdAndRoleDto)
+    {
+        var handler = new JwtSecurityTokenHandler();
+
+        var jwtSecret = _jwtAuthOptions.Secret;
+        if (string.IsNullOrWhiteSpace(jwtSecret)) throw new InvalidOperationException("Missing JWT Secret.");
+
+        var key = Encoding.UTF8.GetBytes(jwtSecret);
+        
+        var credentials = new SigningCredentials(
+            new SymmetricSecurityKey(key),
+            SecurityAlgorithms.HmacSha256Signature);
+
+        var tokenDescriptor = new SecurityTokenDescriptor
+        {
+            SigningCredentials = credentials,
+            Expires = DateTime.UtcNow.AddDays(7),
+            Subject = GenerateAuthTokenClaims(userIdAndRoleDto)
+        };
+        
+        var token = handler.CreateJwtSecurityToken(tokenDescriptor);
+        
+        return handler.WriteToken(token);
+    }
+    
+    private static ClaimsIdentity GenerateAuthTokenClaims(UserIdAndRoleDto userIdAndRoleDto)
+    {
+        var ci = new ClaimsIdentity();
+        ci.AddClaim(new Claim(ClaimTypes.Name, userIdAndRoleDto.Id.ToString()));
+        ci.AddClaim(new Claim(ClaimTypes.Role, userIdAndRoleDto.Role.ToString()));
+        return ci;
+    }
+
     
 }

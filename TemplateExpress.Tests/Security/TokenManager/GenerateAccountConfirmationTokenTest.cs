@@ -15,10 +15,12 @@ public class GenerateAccountConfirmationTokenTest
     public void ValidUserAndSecret()
     {
         // Arrange
-        IOptions<JwtAccountConfirmationOptions> jwtOptions = Options.Create(new JwtAccountConfirmationOptions());
-        jwtOptions.Value.Secret = "testSecretKeyThatHaveMoreThan128Bits";
+        IOptions<JwtAccountConfirmationOptions> jwtAccountConfirmationOptions = Options.Create(new JwtAccountConfirmationOptions());
+        IOptions<JwtAuthOptions> jwtAuthOptions = Options.Create(new JwtAuthOptions());
+        jwtAccountConfirmationOptions.Value.Secret = "testSecretKeyThatHaveMoreThan128Bits";
+        jwtAuthOptions.Value.Secret = "testSecretKeyThatHaveMoreThan128Bits";
         var userIdAndEmailDto = new UserIdAndEmailDto(1, "test@test.com");
-        var tokenManagerSecurity = new TokenManager(jwtOptions);
+        var tokenManagerSecurity = new TokenManager(jwtAccountConfirmationOptions, jwtAuthOptions);
         
         // Act
         var token = tokenManagerSecurity.GenerateAccountConfirmationToken(userIdAndEmailDto);
@@ -55,10 +57,14 @@ public class GenerateAccountConfirmationTokenTest
     public void ValidUserAndInvalidSecret()
     {
         // Arrange
-        IOptions<JwtAccountConfirmationOptions> jwtOptions = Options.Create(new JwtAccountConfirmationOptions());
-        jwtOptions.Value.Secret = "";
+        IOptions<JwtAccountConfirmationOptions> jwtAccountConfirmationOptions = Options.Create(new JwtAccountConfirmationOptions());
+        IOptions<JwtAuthOptions> jwtAuthOptions = Options.Create(new JwtAuthOptions());
+        
+        jwtAccountConfirmationOptions.Value.Secret = "";
+        
         var userIdAndEmailDto = new UserIdAndEmailDto(1, "test@test.com");
-        var tokenManagerSecurity = new TokenManager(jwtOptions);
+        
+        var tokenManagerSecurity = new TokenManager(jwtAccountConfirmationOptions, jwtAuthOptions);
         
         // Act
         Action act = () => tokenManagerSecurity.GenerateAccountConfirmationToken(userIdAndEmailDto);

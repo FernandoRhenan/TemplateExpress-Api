@@ -12,7 +12,7 @@ using TemplateExpress.Api.Data;
 namespace TemplateExpress.Api.Data.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20250422234736_FirstMigration")]
+    [Migration("20250501193615_FirstMigration")]
     partial class FirstMigration
     {
         /// <inheritdoc />
@@ -20,7 +20,7 @@ namespace TemplateExpress.Api.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.14")
+                .HasAnnotation("ProductVersion", "8.0.15")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -142,6 +142,12 @@ namespace TemplateExpress.Api.Data.Migrations
                     b.Property<string>("Password")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("User");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp without time zone");
