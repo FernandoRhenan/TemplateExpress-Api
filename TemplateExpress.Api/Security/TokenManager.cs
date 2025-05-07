@@ -41,7 +41,9 @@ public class TokenManager : ITokenManager
         {
             SigningCredentials = credentials,
             Expires = DateTime.UtcNow.AddHours(12),
-            Subject = GenerateAccountConfirmationTokenClaims(userIdAndEmailDto)
+            Subject = GenerateAccountConfirmationTokenClaims(userIdAndEmailDto),
+            Issuer = _jwtAccountConfirmationOptions.Issuer,
+            Audience = _jwtAccountConfirmationOptions.Audience,
         };
         
         // Generate a Token
@@ -73,21 +75,20 @@ public class TokenManager : ITokenManager
             IssuerSigningKey = key,
             ValidateIssuerSigningKey = true,
             ValidateLifetime = true,
-            ValidateAudience = false,
-            ValidateIssuer = false,
-            // ValidIssuer = "http://localhost:",
-            ClockSkew = TimeSpan.Zero
+            ValidateAudience = true,
+            ValidAudience = _jwtAccountConfirmationOptions.Audience,
+            ValidateIssuer = true,
+            ValidIssuer = _jwtAccountConfirmationOptions.Issuer,
+            ClockSkew = TimeSpan.FromMinutes(2)
         };
         
         var tokenValidationResult = await handler.ValidateTokenAsync(jwtTokenDto.Token, validationParameters);
 
-        if (!tokenValidationResult.IsValid)
-        {
-            List<IErrorMessage> errorMessages = [new ErrorMessage("You do not have authorization for continue.", "Confirm your credentials.")];
-            return Result<TokenValidationResult>.Failure(new Error((byte)ErrorCodes.InvalidJwtToken, (byte)ErrorTypes.Unauthorized, errorMessages));
-        }
+        if (tokenValidationResult.IsValid) return Result<TokenValidationResult>.Success(tokenValidationResult);
+        
+        List<IErrorMessage> errorMessages = [new ErrorMessage("You do not have authorization for continue.", "Confirm your credentials.")];
+        return Result<TokenValidationResult>.Failure(new Error((byte)ErrorCodes.InvalidJwtToken, (byte)ErrorTypes.Unauthorized, errorMessages));
 
-        return Result<TokenValidationResult>.Success(tokenValidationResult);
     }
     
     public UserIdAndEmailDto GetJwtConfirmationAccountTokenClaims(TokenValidationResult tokenValidationResult)
@@ -127,10 +128,12 @@ public class TokenManager : ITokenManager
         {
             SigningCredentials = credentials,
             Expires = DateTime.UtcNow.AddDays(7),
-            Subject = GenerateAuthTokenClaims(userIdAndRoleDto)
+            Subject = GenerateAuthTokenClaims(userIdAndRoleDto),
+            Issuer = _jwtAuthOptions.Issuer,
+            Audience = _jwtAuthOptions.Audience
         };
         
-        var token = handler.CreateJwtSecurityToken(tokenDescriptor);
+        var token = handler.CreateToken(tokenDescriptor);
         
         return handler.WriteToken(token);
     }

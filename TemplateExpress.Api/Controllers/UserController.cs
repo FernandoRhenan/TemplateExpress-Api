@@ -20,7 +20,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPost]
-    [ProducesResponseType<UserEmailDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<JwtTokenDto>(StatusCodes.Status200OK)]
     [ProducesResponseType<Error>(StatusCodes.Status409Conflict)]
     [ProducesResponseType<Error>(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> PostUser([FromBody] CreateUserDto createUserDto, [FromServices] IValidator<CreateUserDto> validator)
@@ -37,7 +37,7 @@ public class UserController : ControllerBase
     } 
     
     [HttpPatch("email-confirmation/{token}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType<JwtTokenDto>(StatusCodes.Status200OK)]
     [ProducesResponseType<Error>(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> PatchConfirmAccount(string token)
     {
@@ -66,7 +66,7 @@ public class UserController : ControllerBase
 
 
     [HttpPost("login")]
-    [ProducesResponseType<Error>(StatusCodes.Status200OK)]
+    [ProducesResponseType<JwtTokenDto>(StatusCodes.Status200OK)]
     [ProducesResponseType<Error>(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> PostLogin([FromBody] EmailAndPasswordDto emailAndPasswordDto, [FromServices] IValidator<EmailAndPasswordDto> validator)
     {
