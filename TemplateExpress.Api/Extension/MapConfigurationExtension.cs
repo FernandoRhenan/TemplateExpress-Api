@@ -2,7 +2,7 @@ using TemplateExpress.Api.Options;
 
 namespace TemplateExpress.Api.Extension;
 
-public static class ConfigurationCollectionExtensions
+public static class MapConfigurationExtension
 {
     public static IServiceCollection ConfigureOptions(this IServiceCollection services, IConfiguration configuration)
     {
